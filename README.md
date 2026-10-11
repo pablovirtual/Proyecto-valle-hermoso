@@ -1,10 +1,16 @@
 # Sistema Web de Pagos para el Fraccionamiento Valle Hermoso
 
+[![GitHub Pages](https://img.shields.io/badge/Demo_en_Vivo-GitHub_Pages-059669?style=for-the-badge&logo=github)](https://pablovirtual.github.io/Proyecto-valle-hermoso/)
+[![Estado](https://img.shields.io/badge/Prototipo-Funcional_100%25-0284c7?style=for-the-badge)](https://pablovirtual.github.io/Proyecto-valle-hermoso/)
+
 **Prototipo Web Funcional e Interactivo**  
 *Universidad de Guadalajara — UDG Virtual*  
 - **Materia:** Proyecto VI / VII  
 - **Estudiante y Desarrollador:** Pedro Pablo Rodríguez Gómez  
 - **Docente:** Mtra. Úrsula del Pilar González Robles  
+
+🌐 **Acceso Directo en Línea (Demo GitHub Pages):**  
+👉 **[https://pablovirtual.github.io/Proyecto-valle-hermoso/](https://pablovirtual.github.io/Proyecto-valle-hermoso/)**
 
 ---
 
@@ -88,3 +94,28 @@ El prototipo utiliza `LocalStorage` para mantener todos los cambios entre recarg
 - [styles.css](file:///c:/Users/ferra/OneDrive/Escritorio/Proyecto%20valle%20hermoso/styles.css) — Estilos personalizados y vista de impresión para recibos.
 - [server.py](file:///c:/Users/ferra/OneDrive/Escritorio/Proyecto%20valle%20hermoso/server.py) — Servidor HTTP local con apertura automática del navegador.
 - [start-prototype.bat](file:///c:/Users/ferra/OneDrive/Escritorio/Proyecto%20valle%20hermoso/start-prototype.bat) — Lanzador ejecutable para Windows.
+- [404.html](file:///c:/Users/ferra/OneDrive/Escritorio/Proyecto%20valle%20hermoso/404.html) — Página de redirección para rutas no encontradas en GitHub Pages.
+- [.nojekyll](file:///c:/Users/ferra/OneDrive/Escritorio/Proyecto%20valle%20hermoso/.nojekyll) — Indicador para servir archivos estáticos directamente sin procesamiento Jekyll.
+- [.github/workflows/deploy.yml](file:///c:/Users/ferra/OneDrive/Escritorio/Proyecto%20valle%20hermoso/.github/workflows/deploy.yml) — Flujo de trabajo de GitHub Actions para despliegue automatizado.
+
+---
+
+## 🌐 Despliegue en GitHub Pages
+
+Este proyecto está configurado para publicarse de forma gratuita e inmediata en **GitHub Pages**:
+
+### Opción A: Despliegue Automático mediante GitHub Actions (Recomendado)
+El proyecto incluye el flujo de trabajo en `.github/workflows/deploy.yml`:
+1. Ve a tu repositorio en GitHub: [https://github.com/pablovirtual/Proyecto-valle-hermoso](https://github.com/pablovirtual/Proyecto-valle-hermoso)
+2. Haz clic en **Settings** (Configuración) > **Pages** (en el menú lateral izquierdo).
+3. En la sección **Build and deployment**:
+   - En **Source**, selecciona **GitHub Actions**.
+4. ¡Listo! Cada vez que hagas `git push` a la rama `main`, la web se actualizará automáticamente.
+
+### Opción B: Despliegue Clásico desde la Rama `main`
+Si prefieres el método clásico de GitHub Pages:
+1. En **Settings** > **Pages** > **Build and deployment**:
+   - En **Source**, selecciona **Deploy from a branch**.
+   - En **Branch**, selecciona `main` y en la carpeta elige `/ (root)`.
+2. Haz clic en **Save**. En un par de minutos tu sitio estará en línea en:
+   👉 **https://pablovirtual.github.io/Proyecto-valle-hermoso/**

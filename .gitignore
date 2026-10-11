@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+
+# Archivos de Sistema Operativo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editores y entornos
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Registros y temporales
+*.log
