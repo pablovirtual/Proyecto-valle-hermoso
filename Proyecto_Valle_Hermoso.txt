@@ -1,0 +1,213 @@
+
+--- Page 1 ---
+ 
+ 
+ 
+UNIVERSIDAD DE GUADALAJARA 
+PROYECTO UNIVERSITARIO 
+Sistema web de pagos para el 
+Fraccionamiento Valle Hermoso 
+ 
+Prototipo de proyecto universitario 
+Materia: Proyecto VII 
+Maestra: Ursula del Pilar González Robles 
+Alumno: Pedro Pablo Rodriguez Gomez 
+Fecha: 1 de septiembre de 2026 
+Documento de presentación para la mesa directiva 
+--- Page 2 ---
+PROYECTO VALLE HERMOSO  |  SISTEMA WEB DE PAGOS 
+Página 1 de 6 
+01 · CONTEXTO 
+Datos generales del proyecto 
+Identificación institucional, propósito y delimitación del prototipo. 
+Nombre: Sistema web de pagos para el Fraccionamiento Valle Hermoso 
+Institución académica: Universidad de Guadalajara 
+Materia: Proyecto VII 
+Responsables: Maestra Ursula del Pilar González Robles y alumno desarrollador Pedro Pablo Rodriguez 
+Gomez 
+Beneficiario propuesto: Mesa directiva, administración y residentes del Fraccionamiento Valle Hermoso 
+Modalidad: Prototipo de sistema web transaccional y administrativo 
+Propósito: Presentar una solución digital para organizar el cobro de cuotas mensuales de 
+mantenimiento y fortalecer el control financiero del fraccionamiento. 
+Objetivo general 
+Diseñar un prototipo funcional y comprensible de un sistema web que permita a los residentes consultar 
+sus cuotas, realizar pagos electrónicos, obtener comprobantes y solicitar facturación, mientras que el 
+personal autorizado dispone de información financiera útil para la administración, la auditoría y el 
+cumplimiento de obligaciones fiscales. 
+Objetivos específicos 
+• Centralizar. reunir en una misma plataforma el registro de cuotas, pagos, comprobantes y 
+solicitudes de factura. 
+• Facilitar. ofrecer alternativas de pago mediante tarjeta de débito, tarjeta de crédito y 
+transferencia bancaria. 
+• Controlar. incorporar roles de acceso, historial de operaciones y reportes de ingresos y egresos. 
+Alcance del prototipo 
+El alcance comprende la demostración de las pantallas, los flujos principales y las reglas de seguridad 
+esperadas. No implica que el prototipo cuente ya con certificación PCI DSS, autorización fiscal o 
+conexión productiva con instituciones financieras. Esta delimitación es importante porque permite 
+evaluar la viabilidad y utilidad del proyecto sin confundir una prueba académica con un servicio 
+financiero listo para operar. 
+--- Page 3 ---
+PROYECTO VALLE HERMOSO  |  SISTEMA WEB DE PAGOS 
+Página 2 de 6 
+02 · NECESIDAD 
+Planteamiento del problema a resolver 
+Situación actual, efectos administrativos y necesidad de una solución centralizada. 
+La administración de un fraccionamiento depende de la recaudación oportuna de las cuotas mensuales 
+destinadas al mantenimiento de áreas comunes, servicios, seguridad y conservación de la 
+infraestructura. Cuando los pagos se reciben por canales dispersos o se registran manualmente, la 
+identificación de cada operación puede requerir revisiones adicionales, intercambio de comprobantes y 
+conciliaciones que consumen tiempo. 
+Para los residentes, esta situación puede traducirse en incertidumbre respecto del saldo pendiente, 
+demoras en la confirmación de un depósito y dificultad para recuperar comprobantes anteriores. Para el 
+personal administrativo, implica mantener registros separados, verificar referencias, corregir 
+duplicidades y atender consultas que podrían resolverse mediante información disponible en línea. 
+Problema central: El fraccionamiento necesita un mecanismo único, accesible y trazable que vincule 
+cada cuota con el residente correspondiente, registre el estado del pago y produzca evidencia 
+consultable para la administración. 
+Consecuencias de la operación dispersa 
+• Trazabilidad limitada. resulta más difícil conocer quién pagó, por qué periodo, mediante qué 
+canal y en qué fecha se confirmó la operación. 
+• Información tardía. la mesa directiva no siempre dispone de una visión inmediata de la 
+recaudación, los adeudos o la disponibilidad de recursos. 
+• Riesgo de inconsistencias. la captura manual puede producir registros incompletos, referencias 
+equivocadas o diferencias entre comprobantes y movimientos bancarios. 
+• Atención repetitiva. gran parte de las consultas administrativas se concentra en saldos, 
+confirmaciones y recuperación de comprobantes. 
+Necesidad financiera y documental 
+Además del cobro, la administración requiere reportes claros de ingresos y egresos para revisar el uso 
+de los recursos, respaldar procesos de auditoría y reunir información para las declaraciones fiscales 
+correspondientes. La ausencia de una fuente central dificulta comparar periodos, identificar 
+movimientos y preparar evidencia. Por ello, el problema no se limita a habilitar un botón de pago: 
+también exige ordenar la información, protegerla y permitir que las personas autorizadas consulten 
+datos consistentes. 
+--- Page 4 ---
+PROYECTO VALLE HERMOSO  |  SISTEMA WEB DE PAGOS 
+Página 3 de 6 
+03 · PROPUESTA 
+Justificación y tipo de sistema web 
+Razones para su desarrollo y clasificación funcional de la solución. 
+Justificación 
+El sistema se justifica por la necesidad de modernizar un proceso recurrente que involucra a residentes, 
+administración y mesa directiva. Una plataforma web concentra las operaciones y permite consultar 
+información desde distintos dispositivos sin instalar programas especializados. 
+Para los residentes, reduce desplazamientos y simplifica la consulta de cuotas, el pago y la conservación 
+de comprobantes. Para la administración, mejora el seguimiento y disminuye la dependencia de 
+archivos aislados. Para la mesa directiva, organiza la revisión de ingresos, egresos y periodos con mayor 
+adeudo. 
+El valor académico del prototipo consiste en integrar análisis de necesidades, interfaces, reglas de 
+negocio, seguridad e información administrativa en un caso realista. La presentación permitirá obtener 
+retroalimentación antes de una etapa productiva y evitar funciones ajenas a la operación del 
+fraccionamiento. 
+Tipo de sistema web 
+• Transaccional. porque registra cuotas y operaciones de pago, conserva estados y genera 
+comprobantes asociados a cada movimiento. 
+• Administrativo. porque permite gestionar usuarios, consultar historiales y organizar información 
+necesaria para el control del fraccionamiento. 
+• De gestión financiera. porque presenta reportes de ingresos y egresos con filtros que apoyan 
+revisiones, conciliaciones y auditorías. 
+• Multiusuario y basado en roles. porque diferencia las funciones disponibles para residentes y 
+administradores mediante credenciales individuales. 
+Forma de acceso 
+La solución se concibe como una aplicación web adaptable a computadoras, tabletas y teléfonos, 
+accesible mediante navegador y conexión cifrada HTTPS. Después de autenticarse, cada persona 
+visualizará únicamente las opciones de su perfil. La arquitectura definitiva y las integraciones financieras 
+y fiscales se definirán en una etapa posterior, tras validar los requisitos técnicos, legales y operativos. 
+--- Page 5 ---
+PROYECTO VALLE HERMOSO  |  SISTEMA WEB DE PAGOS 
+Página 4 de 6 
+04 · CAPACIDADES 
+Características del proyecto 
+Funciones previstas para residentes, administración y protección de la información. 
+• Página de inicio. presentará el propósito del sistema, medios de contacto y accesos visibles para 
+iniciar sesión o consultar información general. 
+• Autenticación. cada usuario accederá con nombre de usuario y contraseña; los permisos se 
+asignarán según su rol y responsabilidades. 
+• Consulta de cuotas. el residente podrá revisar periodos, conceptos, importes, vencimientos y 
+estado de sus obligaciones de mantenimiento. 
+• Pago electrónico. el flujo contemplará tarjeta de débito, tarjeta de crédito y transferencia 
+bancaria, mostrando el estado de la operación. 
+• Comprobantes. las operaciones confirmadas producirán evidencia consultable y descargable, 
+vinculada al usuario y al periodo pagado. 
+• Solicitud de factura. el usuario podrá indicar si requiere factura y proporcionar los datos 
+necesarios; la emisión efectiva dependerá de una integración fiscal validada. 
+• Historial. residentes y administradores autorizados podrán consultar movimientos anteriores 
+conforme a sus permisos. 
+• Reportes. el módulo administrativo reunirá ingresos y egresos, con filtros por fecha, concepto, 
+estado y tipo de movimiento. 
+Seguridad y protección de datos 
+El procesamiento de pagos deberá diseñarse para cumplir los requisitos aplicables del estándar PCI DSS 
+mediante una integración especializada. El sistema utilizará HTTPS para cifrar la comunicación y no 
+almacenará el código CVV ni el número completo de la tarjeta en su base de datos. En un escenario 
+productivo, los datos sensibles deberán ser procesados por componentes autorizados y el prototipo 
+únicamente conservará referencias técnicas limitadas, como el identificador de la transacción, su estado 
+y datos enmascarados cuando sean necesarios para consulta. 
+El control de acceso se complementará con separación de roles, contraseñas protegidas, validación de 
+sesiones y registro de acciones administrativas relevantes. Estas medidas se presentan como requisitos 
+de diseño y deberán someterse a evaluación técnica antes de operar con información o pagos reales. 
+--- Page 6 ---
+PROYECTO VALLE HERMOSO  |  SISTEMA WEB DE PAGOS 
+Página 5 de 6 
+05 · OPERACIÓN 
+Descripción del sistema: experiencia del residente 
+Recorrido propuesto desde la autenticación hasta el comprobante y la facturación. 
+1. Ingreso al sistema. el residente accede desde la página de inicio e introduce sus credenciales. Si la 
+información es válida, el sistema abre un panel personal; en caso contrario, muestra un aviso sin 
+revelar datos sensibles. 
+2. Consulta del estado de cuenta. el panel presenta las cuotas pendientes y pagadas, el periodo 
+correspondiente, el concepto y la fecha límite. La información deberá ser comprensible y permitir 
+identificar de inmediato cualquier saldo. 
+3. Selección de cuota y método. el usuario elige la obligación que desea cubrir y selecciona tarjeta 
+de débito, tarjeta de crédito o transferencia bancaria. Antes de continuar, el sistema resume el 
+concepto y el importe. 
+4. Procesamiento. para pagos con tarjeta, los datos sensibles se capturan en un componente de 
+pago especializado y no se guardan en la base de datos del proyecto. Para transferencias, se 
+muestran la referencia y las instrucciones necesarias para identificar el movimiento. 
+5. Resultado de la operación. el sistema informa si el pago fue confirmado, rechazado o permanece 
+pendiente. Una transferencia puede quedar en verificación hasta que la administración concilie el 
+movimiento. 
+6. Comprobante. cuando la operación se confirma, se genera un comprobante con folio, fecha, 
+concepto, importe y referencia, disponible para consulta posterior. 
+7. Solicitud de factura. si el residente requiere factura, selecciona la opción correspondiente y 
+captura o confirma sus datos fiscales. El sistema registra la solicitud y comunica su estado sin 
+afirmar que la emisión está concluida hasta recibir confirmación del servicio fiscal integrado. 
+Mensajes y manejo de incidencias 
+Los mensajes deben indicar con claridad qué ocurrió y qué acción puede realizar la persona. Un rechazo 
+no deberá marcar la cuota como pagada; una operación pendiente conservará su referencia para 
+seguimiento; y una transferencia por verificar no se confirmará hasta contar con evidencia suficiente. Si 
+existe una interrupción, el usuario podrá consultar el historial antes de intentar nuevamente, con el fin 
+de reducir pagos duplicados. 
+Criterio de experiencia: El residente debe poder completar el proceso con instrucciones breves, 
+conocer el estado real de su pago y recuperar su comprobante sin depender de una aclaración manual. 
+--- Page 7 ---
+PROYECTO VALLE HERMOSO  |  SISTEMA WEB DE PAGOS 
+Página 6 de 6 
+06 · CONTROL 
+Descripción del sistema: administración y cierre 
+Herramientas de supervisión, reportes y evolución propuesta del proyecto. 
+Panel administrativo 
+El perfil administrativo concentrará residentes, cuotas, pagos, solicitudes de factura y egresos. El acceso 
+estará limitado a cuentas autorizadas y cada función se mostrará según el rol asignado. Las acciones 
+relevantes dejarán una referencia de fecha, usuario y operación para apoyar la trazabilidad. 
+Reportes de ingresos y egresos 
+Los reportes permitirán seleccionar periodos y filtrar por concepto, tipo de movimiento, estado o 
+residente. Los ingresos reflejarán pagos confirmados y los egresos, los desembolsos registrados con su 
+concepto y fecha. Los resultados presentarán totales y detalle suficiente para revisión, conciliación, 
+auditoría y preparación de información fiscal. 
+El sistema no sustituirá el criterio contable ni la documentación oficial: ordenará la evidencia y facilitará 
+su consulta. Toda exportación usada en declaraciones deberá ser revisada por las personas responsables 
+y ajustarse a las disposiciones vigentes. 
+Control de acceso y resguardo 
+• Mínimo privilegio. cada cuenta tendrá sólo los permisos necesarios para su función. 
+• Separación de información. los residentes consultarán sus datos y los reportes globales quedarán 
+reservados a la administración. 
+• Registro de actividad. las operaciones administrativas sensibles quedarán identificadas para 
+revisión. 
+• Protección técnica. la operación productiva requerirá HTTPS, credenciales seguras, respaldos y 
+evaluación de vulnerabilidades. 
+Conclusión 
+El prototipo Valle Hermoso hace más accesible el pago de cuotas, mejora la trazabilidad y proporciona 
+información administrativa oportuna. Su valor para la mesa directiva consiste en visualizar una 
+experiencia integrada antes de asumir el costo y la responsabilidad de una implementación real. 
+Como evolución, el proyecto podrá validarse con usuarios y someterse a revisión legal, fiscal y de 
+seguridad, además de integrarse con servicios especializados. Así podrá avanzar hacia una solución 
+operativa sin comprometer los datos ni atribuir al prototipo certificaciones que todavía no posee. 

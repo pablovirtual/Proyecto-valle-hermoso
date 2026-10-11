@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema Web de Pagos - Fraccionamiento Valle Hermoso</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Font Awesome & Google Fonts -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Chart.js para Reportes Financieros -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- QRCode.js para Sellos y Comprobantes Digitales -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <!-- Canvas Confetti para confirmaciones de pago -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <!-- Estilos Personalizados -->
+  <link rel="stylesheet" href="styles.css">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              800: '#065f46',
+              900: '#064e3b',
+            },
+            accent: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              500: '#0ea5e9',
+              600: '#0284c7',
+              700: '#0369a1',
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col selection:bg-brand-500 selection:text-white">
+
+  <!-- ================= BARRA SUPERIOR DE ENTORNO ACADÉMICO / PROTOTIPO ================= -->
+  <div class="bg-slate-900 text-slate-300 text-xs py-2 px-4 border-b border-slate-800">
+    <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-2">
+      <div class="flex items-center gap-2">
+        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+          PROTOTIPO FUNCIONAL v1.0
+        </span>
+        <span class="hidden sm:inline text-slate-400">UDG Virtual | Proyecto VI / VII | Desarrollador: <strong>Pedro Pablo Rodríguez Gómez</strong></span>
+      </div>
+      <div class="flex items-center gap-4">
+        <!-- Selector Rápido de Roles para Demostración -->
+        <div class="flex items-center gap-2 bg-slate-800/80 px-2.5 py-1 rounded-md border border-slate-700">
+          <i class="fa-solid fa-user-gear text-emerald-400 text-xs"></i>
+          <span class="text-slate-300 text-[11px] font-medium">Modo actual:</span>
+          <select id="role-quick-switcher" onchange="switchRole(this.value)" class="bg-slate-900 text-white text-xs rounded px-2 py-0.5 border border-slate-600 focus:outline-none focus:border-brand-500 font-semibold cursor-pointer">
+            <option value="landing">🌐 Página Pública</option>
+            <option value="resident" selected>👤 Portal Residente (Lote 14)</option>
+            <option value="admin">🛡️ Panel Administrativo (Mesa Directiva)</option>
+          </select>
+        </div>
+        <button onclick="resetDemoData()" title="Reiniciar datos de prueba" class="text-slate-400 hover:text-rose-400 text-xs transition flex items-center gap-1">
+          <i class="fa-solid fa-rotate-left"></i> <span class="hidden md:inline">Reiniciar Datos</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= NAVBAR PRINCIPAL ================= -->
+  <header class="bg-white/95 backdrop-blur-md sticky top-0 z-40 border-b border-slate-200/80 shadow-xs">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16 items-center">
+        <!-- Logotipo del Fraccionamiento -->
+        <div class="flex items-center gap-3 cursor-pointer" onclick="navigateTo('landing')">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-700 to-brand-500 flex items-center justify-center text-white shadow-md shadow-brand-500/20">
+            <i class="fa-solid fa-tree-city text-lg"></i>
+          </div>
+          <div>
+            <span class="text-lg font-bold tracking-tight text-slate-900 flex items-center gap-1.5">
+              Valle Hermoso
+              <span class="text-xs font-semibold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">Residencial</span>
+            </span>
+            <p class="text-[11px] text-slate-500 font-medium">Sistema Web de Pagos y Control Financiero</p>
+          </div>
+        </div>
+
+        <!-- Navegación según Rol Activo -->
+        <nav id="nav-links" class="hidden md:flex items-center gap-1">
+          <!-- Se actualiza dinámicamente con JavaScript -->
+        </nav>
+
+        <!-- Botones de Acción de Usuario -->
+        <div class="flex items-center gap-3" id="nav-user-actions">
+          <!-- Se actualiza dinámicamente con JavaScript -->
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= CONTENEDOR DE VISTAS (SPA) ================= -->
+  <main class="flex-1 pb-16">
+
+    <!-- ------------------------------------------------------------------------ -->
+    <!-- VISTA 1: LANDING PAGE PÚBLICA (Página de Inicio / Información)           -->
+    <!-- ------------------------------------------------------------------------ -->
+    <section id="view-landing" class="view-panel hidden">
+      <!-- Hero Section -->
+      <div class="relative bg-gradient-to-b from-emerald-900 via-slate-900 to-slate-900 text-white py-20 px-4 overflow-hidden">
+        <div class="absolute inset-0 bg-[radial-gradient(#10b981_1px,transparent_1px)] [background-size:20px_20px] opacity-15"></div>
+        <div class="max-w-5xl mx-auto text-center relative z-10">
+          <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-xs font-semibold mb-6">
+            <i class="fa-solid fa-shield-halved"></i> Plataforma Oficial de Cuotas y Mantenimiento
+          </div>
+          <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight mb-6 leading-tight">
+            Gestión transparente y pagos seguros para el <span class="text-emerald-400 underline decoration-emerald-500/40 decoration-wavy">Fraccionamiento Valle Hermoso</span>
+          </h1>
+          <p class="text-slate-300 text-base sm:text-lg max-w-3xl mx-auto mb-8 font-normal leading-relaxed">
+            Centraliza el pago de cuotas mensuales de mantenimiento, descarga comprobantes digitales con validez institucional, solicita facturación electrónica y consulta el balance financiero en tiempo real.
+          </p>
+          <div class="flex flex-wrap justify-center gap-4">
+            <button onclick="loginAsResident()" class="px-6 py-3.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-sm shadow-lg shadow-brand-600/30 transition transform hover:-translate-y-0.5 flex items-center gap-2">
+              <i class="fa-solid fa-user"></i> Ingresar como Residente
+            </button>
+            <button onclick="loginAsAdmin()" class="px-6 py-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold text-sm transition flex items-center gap-2">
+              <i class="fa-solid fa-lock"></i> Acceso Mesa Directiva
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Métricas y Ventajas Clave -->
+      <div class="max-w-7xl mx-auto px-4 -mt-10 relative z-20">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div class="bg-white p-5 rounded-2xl shadow-md border border-slate-100 flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-emerald-100 text-brand-700 flex items-center justify-center text-xl shrink-0">
+              <i class="fa-solid fa-credit-card"></i>
+            </div>
+            <div>
+              <h4 class="font-bold text-slate-800 text-sm">Pagos Multicanal</h4>
+              <p class="text-xs text-slate-500">Tarjetas y transferencia SPEI con referencia única.</p>
+            </div>
+          </div>
+          <div class="bg-white p-5 rounded-2xl shadow-md border border-slate-100 flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-blue-100 text-accent-700 flex items-center justify-center text-xl shrink-0">
+              <i class="fa-solid fa-file-invoice-dollar"></i>
+            </div>
+            <div>
+              <h4 class="font-bold text-slate-800 text-sm">Recibos Inmediatos</h4>
+              <p class="text-xs text-slate-500">Folio fiscal, código QR y descarga en PDF al instante.</p>
+            </div>
+          </div>
+          <div class="bg-white p-5 rounded-2xl shadow-md border border-slate-100 flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-xl shrink-0">
+              <i class="fa-solid fa-scale-balanced"></i>
+            </div>
+            <div>
+              <h4 class="font-bold text-slate-800 text-sm">Cero Dispersión</h4>
+              <p class="text-xs text-slate-500">Conciliación automática y trazabilidad de ingresos.</p>
+            </div>
+          </div>
+          <div class="bg-white p-5 rounded-2xl shadow-md border border-slate-100 flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center text-xl shrink-0">
+              <i class="fa-solid fa-shield-cat"></i>
+            </div>
+            <div>
+              <h4 class="font-bold text-slate-800 text-sm">Seguridad y Privacidad</h4>
+              <p class="text-xs text-slate-500">Cumplimiento conceptual PCI DSS sin guardar CVV.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sección de Información y Comunicados del Fraccionamiento -->
+      <div class="max-w-7xl mx-auto px-4 py-16">
+        <div class="text-center mb-12">
+          <span class="text-brand-600 font-bold text-xs uppercase tracking-wider">Transparencia y Comunidad</span>
+          <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">Avisos y Cuotas del Periodo</h2>
+          <p class="text-slate-500 text-sm max-w-2xl mx-auto mt-2">Mantente al tanto de las actividades de mantenimiento, mejoras comunitarias y calendarios de cobro.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs hover:shadow-md transition">
+            <div class="h-3 bg-brand-600"></div>
+            <div class="p-6">
+              <div class="flex items-center justify-between text-xs text-slate-400 mb-2">
+                <span><i class="fa-regular fa-calendar"></i> Octubre 2026</span>
+                <span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-semibold">Cuota Ordinaria</span>
+              </div>
+              <h3 class="font-bold text-base text-slate-900 mb-2">Mantenimiento Mensual: $1,200 MXN</h3>
+              <p class="text-xs text-slate-600 leading-relaxed mb-4">Cubre vigilancia privada 24/7 en caseta, recolección de basura, iluminación pública y limpieza de vialidades.</p>
+              <div class="text-[11px] text-slate-500 bg-slate-50 p-3 rounded-lg border border-slate-100">
+                <i class="fa-solid fa-circle-info text-brand-600 mr-1"></i> Fecha límite de pago sin recargos: <strong>10 de cada mes</strong>.
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs hover:shadow-md transition">
+            <div class="h-3 bg-accent-600"></div>
+            <div class="p-6">
+              <div class="flex items-center justify-between text-xs text-slate-400 mb-2">
+                <span><i class="fa-regular fa-calendar"></i> Vigente</span>
+                <span class="px-2 py-0.5 rounded bg-sky-100 text-sky-800 font-semibold">Mejora Común</span>
+              </div>
+              <h3 class="font-bold text-base text-slate-900 mb-2">Rehabilitación de Alberca y Jardines</h3>
+              <p class="text-xs text-slate-600 leading-relaxed mb-4">Aprobado en Asamblea General: Mantenimiento preventivo al sistema de bombeo y reforestación de áreas verdes.</p>
+              <div class="text-[11px] text-slate-500 bg-slate-50 p-3 rounded-lg border border-slate-100">
+                <i class="fa-solid fa-check text-sky-600 mr-1"></i> Progreso de obra: <strong>75% completado</strong>.
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs hover:shadow-md transition">
+            <div class="h-3 bg-amber-500"></div>
+            <div class="p-6">
+              <div class="flex items-center justify-between text-xs text-slate-400 mb-2">
+                <span><i class="fa-regular fa-calendar"></i> Importante</span>
+                <span class="px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-semibold">Reglamento</span>
+              </div>
+              <h3 class="font-bold text-base text-slate-900 mb-2">Solicitud de Facturación (CFDI 4.0)</h3>
+              <p class="text-xs text-slate-600 leading-relaxed mb-4">Si requieres comprobante fiscal para deducibilidad, registra tus datos fiscales en el portal antes del día 25 del mes en curso.</p>
+              <div class="text-[11px] text-slate-500 bg-slate-50 p-3 rounded-lg border border-slate-100">
+                <i class="fa-solid fa-receipt text-amber-600 mr-1"></i> Emisión sujeta a validación con el RFC del titular.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ------------------------------------------------------------------------ -->
+    <!-- VISTA 2: MODAL DE INICIO DE SESIÓN                                       -->
+    <!-- ------------------------------------------------------------------------ -->
+    <div id="modal-login" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+      <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 animate-scale-up">
+        <div class="flex justify-between items-center mb-5">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center text-sm">
+              <i class="fa-solid fa-key"></i>
+            </div>
+            <h3 class="font-bold text-lg text-slate-900">Iniciar Sesión</h3>
+          </div>
+          <button onclick="closeLoginModal()" class="text-slate-400 hover:text-slate-600 text-lg">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <form id="form-login" onsubmit="handleLoginSubmit(event)" class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Tipo de Cuenta / Rol</label>
+            <div class="grid grid-cols-2 gap-2">
+              <label class="flex items-center gap-2 p-3 border rounded-xl cursor-pointer hover:bg-slate-50 transition border-brand-500 bg-brand-50/50">
+                <input type="radio" name="login-role" value="resident" checked class="text-brand-600">
+                <div class="text-xs font-semibold text-slate-800">Residente</div>
+              </label>
+              <label class="flex items-center gap-2 p-3 border rounded-xl cursor-pointer hover:bg-slate-50 transition border-slate-200">
+                <input type="radio" name="login-role" value="admin" class="text-brand-600">
+                <div class="text-xs font-semibold text-slate-800">Administrador</div>
+              </label>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Usuario / Correo Electrónico</label>
+            <input type="text" id="login-username" required class="w-full text-sm px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500" value="carlos.ramirez@vallehermoso.mx">
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Contraseña</label>
+            <input type="password" id="login-password" required class="w-full text-sm px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500" value="demo1234">
+          </div>
+
+          <div class="p-3 bg-slate-50 rounded-xl text-[11px] text-slate-500 border border-slate-200">
+            <span class="font-bold text-slate-700">Usuarios demo precargados:</span><br>
+            • Residente: <code>carlos.ramirez@vallehermoso.mx</code> (Lote 14)<br>
+            • Mesa Directiva: <code>admin@vallehermoso.mx</code>
+          </div>
+
+          <button type="submit" class="w-full py-3 bg-brand-600 hover:bg-brand-500 text-white rounded-xl font-bold text-sm shadow-md shadow-brand-600/30 transition">
+            Entrar al Portal
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- ------------------------------------------------------------------------ -->
+    <!-- VISTA 3: PORTAL DEL RESIDENTE                                            -->
+    <!-- ------------------------------------------------------------------------ -->
+    <section id="view-resident" class="view-panel max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 hidden">
+      <!-- Tarjeta de Bienvenida del Residente -->
+      <div class="bg-gradient-to-r from-emerald-800 to-teal-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl mb-8 relative overflow-hidden">
+        <div class="absolute -right-10 -bottom-10 opacity-10 text-9xl">
+          <i class="fa-solid fa-house-chimney-user"></i>
+        </div>
+        <div class="relative z-10 flex flex-wrap justify-between items-center gap-4">
+          <div>
+            <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/30 text-emerald-200 text-xs font-semibold mb-2">
+              <i class="fa-solid fa-location-dot"></i> Lote 14 • Calle Los Pinos #104
+            </div>
+            <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Bienvenido, <span id="resident-name-display">Carlos Ramírez Morales</span></h2>
+            <p class="text-emerald-100 text-xs sm:text-sm mt-1">Consulta tus cuotas de mantenimiento, realiza pagos en línea y descarga tus comprobantes oficiales.</p>
+          </div>
+          <div class="bg-white/10 backdrop-blur-md px-5 py-3.5 rounded-2xl border border-white/20 text-right">
+            <span class="text-xs text-emerald-200 font-medium block">Estado de Cuenta Actual</span>
+            <span id="resident-balance-badge" class="text-2xl font-black text-amber-300">$1,200.00 MXN</span>
+            <span class="text-[11px] text-emerald-100 block">1 cuota por liquidar</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navegación de Pestañas del Residente -->
+      <div class="flex border-b border-slate-200 mb-6 gap-2 overflow-x-auto">
+        <button onclick="switchResidentTab('cuotas')" id="tab-btn-cuotas" class="resident-tab-btn active-tab px-4 py-2.5 font-bold text-xs sm:text-sm text-brand-600 border-b-2 border-brand-600 flex items-center gap-2">
+          <i class="fa-solid fa-receipt"></i> Mis Cuotas y Pagos
+        </button>
+        <button onclick="switchResidentTab('historial')" id="tab-btn-historial" class="resident-tab-btn px-4 py-2.5 font-medium text-xs sm:text-sm text-slate-500 hover:text-slate-800 flex items-center gap-2">
+          <i class="fa-solid fa-clock-rotate-left"></i> Historial y Comprobantes
+        </button>
+        <button onclick="switchResidentTab('facturacion')" id="tab-btn-facturacion" class="resident-tab-btn px-4 py-2.5 font-medium text-xs sm:text-sm text-slate-500 hover:text-slate-800 flex items-center gap-2">
+          <i class="fa-solid fa-file-invoice"></i> Datos Fiscales (Facturación)
+        </button>
+      </div>
+
+      <!-- PESTAÑA RESIDENTE 1: CUOTAS Y PAGOS -->
+      <div id="resident-tab-cuotas" class="space-y-6">
+        <!-- Listado de Cuotas Asignadas -->
+        <div>
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="font-bold text-slate-900 text-lg flex items-center gap-2">
+              <i class="fa-solid fa-wallet text-brand-600"></i> Cuotas del Periodo
+            </h3>
+            <span class="text-xs text-slate-500">Selecciona una cuota pendiente para proceder al pago</span>
+          </div>
+
+          <div id="resident-fees-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <!-- Renderizado dinámicamente -->
+          </div>
+        </div>
+      </div>
+
+      <!-- PESTAÑA RESIDENTE 2: HISTORIAL Y COMPROBANTES -->
+      <div id="resident-tab-historial" class="hidden space-y-6">
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs">
+          <div class="flex justify-between items-center mb-4">
+            <div>
+              <h3 class="font-bold text-slate-900 text-base">Historial de Transacciones y Comprobantes</h3>
+              <p class="text-xs text-slate-500">Todos los pagos procesados y evidencia consultable con folio oficial.</p>
+            </div>
+            <div class="flex gap-2">
+              <input type="text" placeholder="Buscar por concepto o folio..." class="text-xs px-3 py-1.5 border border-slate-300 rounded-lg focus:outline-none focus:border-brand-500">
+            </div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr class="bg-slate-50 text-slate-600 border-b border-slate-200">
+                  <th class="p-3 font-semibold">Folio</th>
+                  <th class="p-3 font-semibold">Fecha</th>
+                  <th class="p-3 font-semibold">Concepto / Periodo</th>
+                  <th class="p-3 font-semibold">Método</th>
+                  <th class="p-3 font-semibold">Monto</th>
+                  <th class="p-3 font-semibold">Estado</th>
+                  <th class="p-3 font-semibold text-center">Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="resident-history-table-body" class="divide-y divide-slate-100">
+                <!-- Renderizado dinámicamente -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- PESTAÑA RESIDENTE 3: FACTURACIÓN CFDI -->
+      <div id="resident-tab-facturacion" class="hidden space-y-6">
+        <div class="max-w-3xl mx-auto bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-xs">
+          <div class="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
+            <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-lg">
+              <i class="fa-solid fa-file-invoice-dollar"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-slate-900 text-base">Solicitud de Factura Fiscal (CFDI 4.0)</h3>
+              <p class="text-xs text-slate-500">De conformidad con las disposiciones fiscales y la propuesta del sistema.</p>
+            </div>
+          </div>
+
+          <form id="form-cfdi" onsubmit="handleCfdiSubmit(event)" class="space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">RFC del Titular</label>
+                <input type="text" id="cfdi-rfc" required maxlength="13" placeholder="RAMC850412AA1" class="uppercase w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:border-brand-500" value="RAMC850412AA1">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Nombre o Razón Social</label>
+                <input type="text" id="cfdi-name" required placeholder="Carlos Ramírez Morales" class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:border-brand-500" value="CARLOS RAMIREZ MORALES">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Régimen Fiscal</label>
+                <select id="cfdi-regimen" class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:border-brand-500">
+                  <option value="605">605 - Sueldos y Salarios e Ingresos Asimilados</option>
+                  <option value="612">612 - Personas Físicas con Actividades Empresariales</option>
+                  <option value="626">626 - Régimen Simplificado de Confianza (RESICO)</option>
+                  <option value="601">601 - General de Ley Personas Morales</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Uso de CFDI</label>
+                <select id="cfdi-uso" class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:border-brand-500">
+                  <option value="G03">G03 - Gastos en general</option>
+                  <option value="D04">D04 - Donativos</option>
+                  <option value="S01">S01 - Sin efectos fiscales</option>
+                  <option value="CP01">CP01 - Pagos</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Código Postal Fiscal</label>
+                <input type="text" id="cfdi-cp" required maxlength="5" placeholder="44100" class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:border-brand-500" value="44100">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Correo Electrónico para Factura</label>
+                <input type="email" id="cfdi-email" required placeholder="correo@ejemplo.com" class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:border-brand-500" value="carlos.ramirez@vallehermoso.mx">
+              </div>
+            </div>
+
+            <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-[11px] text-amber-800">
+              <i class="fa-solid fa-triangle-exclamation mr-1"></i>
+              <strong>Nota del Prototipo:</strong> De acuerdo con el documento de alcance, el sistema registra la solicitud fiscal y valida la estructura; la emisión final requerirá de un PAC (Proveedor Autorizado de Certificación) contratado formalmente por la Asociación Vecinal.
+            </div>
+
+            <button type="submit" class="px-6 py-2.5 bg-amber-600 hover:bg-amber-500 text-white rounded-xl font-bold text-xs shadow-md transition">
+              Guardar y Solicitar Facturas Automáticas
+            </button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- ------------------------------------------------------------------------ -->
+    <!-- VISTA 4: PANEL ADMINISTRATIVO (Mesa Directiva)                           -->
+    <!-- ------------------------------------------------------------------------ -->
+    <section id="view-admin" class="view-panel max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 hidden">
+      <!-- Encabezado del Administrador -->
+      <div class="flex flex-wrap justify-between items-center gap-4 mb-8">
+        <div>
+          <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-200 text-slate-800 text-xs font-bold mb-2">
+            <i class="fa-solid fa-shield-halved text-brand-600"></i> Panel de Control • Mesa Directiva
+          </div>
+          <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Administración Financiera</h2>
+          <p class="text-slate-500 text-xs sm:text-sm">Control centralizado de cuotas, verificación de transferencias, egresos y reportes contables.</p>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="openNewFeeModal()" class="px-4 py-2.5 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-xs font-bold shadow-md shadow-brand-600/20 flex items-center gap-1.5 transition">
+            <i class="fa-solid fa-plus"></i> Nueva Cuota General
+          </button>
+          <button onclick="openNewExpenseModal()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition">
+            <i class="fa-solid fa-money-bill-transfer"></i> Registrar Egreso
+          </button>
+        </div>
+      </div>
+
+      <!-- Tarjetas KPI del Dashboard -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+          <div class="flex justify-between items-start mb-3">
+            <span class="text-xs font-semibold text-slate-500">Recaudación del Mes</span>
+            <span class="w-8 h-8 rounded-lg bg-emerald-100 text-brand-700 flex items-center justify-center text-sm"><i class="fa-solid fa-chart-line"></i></span>
+          </div>
+          <div class="text-2xl font-extrabold text-slate-900" id="kpi-recaudacion">$21,600.00</div>
+          <span class="text-[11px] text-emerald-600 font-medium"><i class="fa-solid fa-arrow-up"></i> 18 cuotas cobradas de 25</span>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+          <div class="flex justify-between items-start mb-3">
+            <span class="text-xs font-semibold text-slate-500">Cartera Vencida / Pendiente</span>
+            <span class="w-8 h-8 rounded-lg bg-rose-100 text-rose-700 flex items-center justify-center text-sm"><i class="fa-solid fa-triangle-exclamation"></i></span>
+          </div>
+          <div class="text-2xl font-extrabold text-rose-600" id="kpi-morosidad">$8,400.00</div>
+          <span class="text-[11px] text-slate-500 font-medium">7 lotes con adeudo</span>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+          <div class="flex justify-between items-start mb-3">
+            <span class="text-xs font-semibold text-slate-500">Por Conciliar (SPEI)</span>
+            <span class="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center text-sm"><i class="fa-solid fa-hand-holding-dollar"></i></span>
+          </div>
+          <div class="text-2xl font-extrabold text-amber-600" id="kpi-pendientes">2</div>
+          <span class="text-[11px] text-amber-600 font-medium">Requieren validación manual</span>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+          <div class="flex justify-between items-start mb-3">
+            <span class="text-xs font-semibold text-slate-500">Egresos Operativos</span>
+            <span class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center text-sm"><i class="fa-solid fa-file-invoice"></i></span>
+          </div>
+          <div class="text-2xl font-extrabold text-slate-900" id="kpi-egresos">$14,250.00</div>
+          <span class="text-[11px] text-slate-500 font-medium">Vigilancia, alumbrado y jardines</span>
+        </div>
+      </div>
+
+      <!-- Pestañas Administrativas -->
+      <div class="flex border-b border-slate-200 mb-6 gap-2 overflow-x-auto">
+        <button onclick="switchAdminTab('conciliacion')" id="adm-tab-conciliacion" class="admin-tab-btn active-tab px-4 py-2.5 font-bold text-xs sm:text-sm text-brand-600 border-b-2 border-brand-600 flex items-center gap-2">
+          <i class="fa-solid fa-clipboard-check"></i> Conciliación de Pagos <span id="badge-pendientes-count" class="bg-amber-500 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold">2</span>
+        </button>
+        <button onclick="switchAdminTab('residentes')" id="adm-tab-residentes" class="admin-tab-btn px-4 py-2.5 font-medium text-xs sm:text-sm text-slate-500 hover:text-slate-800 flex items-center gap-2">
+          <i class="fa-solid fa-users"></i> Padrón de Residentes
+        </button>
+        <button onclick="switchAdminTab('egresos')" id="adm-tab-egresos" class="admin-tab-btn px-4 py-2.5 font-medium text-xs sm:text-sm text-slate-500 hover:text-slate-800 flex items-center gap-2">
+          <i class="fa-solid fa-money-bill-wave"></i> Registro de Egresos
+        </button>
+        <button onclick="switchAdminTab('reportes')" id="adm-tab-reportes" class="admin-tab-btn px-4 py-2.5 font-medium text-xs sm:text-sm text-slate-500 hover:text-slate-800 flex items-center gap-2">
+          <i class="fa-solid fa-chart-pie"></i> Reportes Financieros
+        </button>
+        <button onclick="switchAdminTab('auditoria')" id="adm-tab-auditoria" class="admin-tab-btn px-4 py-2.5 font-medium text-xs sm:text-sm text-slate-500 hover:text-slate-800 flex items-center gap-2">
+          <i class="fa-solid fa-fingerprint"></i> Trazabilidad / Auditoría
+        </button>
+      </div>
+
+      <!-- ADMIN PESTAÑA 1: CONCILIACIÓN SPEI -->
+      <div id="admin-tab-conciliacion" class="space-y-6">
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs">
+          <div class="flex justify-between items-center mb-4">
+            <div>
+              <h3 class="font-bold text-slate-900 text-base">Bandeja de Transferencias por Verificar</h3>
+              <p class="text-xs text-slate-500">Revisa la evidencia de pago reportada por los residentes para confirmar o rechazar la operación.</p>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr class="bg-slate-50 text-slate-600 border-b border-slate-200">
+                  <th class="p-3 font-semibold">Referencia / Folio</th>
+                  <th class="p-3 font-semibold">Residente / Lote</th>
+                  <th class="p-3 font-semibold">Concepto</th>
+                  <th class="p-3 font-semibold">Fecha Reportada</th>
+                  <th class="p-3 font-semibold">Monto</th>
+                  <th class="p-3 font-semibold">Comprobante Adjunto</th>
+                  <th class="p-3 font-semibold text-center">Acción</th>
+                </tr>
+              </thead>
+              <tbody id="admin-pending-table-body" class="divide-y divide-slate-100">
+                <!-- Renderizado dinámicamente -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ADMIN PESTAÑA 2: PADRÓN DE RESIDENTES -->
+      <div id="admin-tab-residentes" class="hidden space-y-6">
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs">
+          <div class="flex flex-wrap justify-between items-center gap-3 mb-4">
+            <div>
+              <h3 class="font-bold text-slate-900 text-base">Directorio de Viviendas y Residentes</h3>
+              <p class="text-xs text-slate-500">25 Lotes registrados en el Fraccionamiento Valle Hermoso.</p>
+            </div>
+            <input type="text" id="search-resident-input" onkeyup="filterResidents(this.value)" placeholder="Filtrar por lote o nombre..." class="text-xs px-3.5 py-2 border border-slate-300 rounded-xl focus:outline-none focus:border-brand-500">
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr class="bg-slate-50 text-slate-600 border-b border-slate-200">
+                  <th class="p-3 font-semibold">Lote</th>
+                  <th class="p-3 font-semibold">Dirección</th>
+                  <th class="p-3 font-semibold">Propietario / Residente</th>
+                  <th class="p-3 font-semibold">Contacto</th>
+                  <th class="p-3 font-semibold">Estado de Cuota</th>
+                  <th class="p-3 font-semibold">Saldo</th>
+                  <th class="p-3 font-semibold text-center">Detalle</th>
+                </tr>
+              </thead>
+              <tbody id="admin-residents-table-body" class="divide-y divide-slate-100">
+                <!-- Renderizado dinámicamente -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ADMIN PESTAÑA 3: REGISTRO DE EGRESOS -->
+      <div id="admin-tab-egresos" class="hidden space-y-6">
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs">
+          <div class="flex justify-between items-center mb-4">
+            <div>
+              <h3 class="font-bold text-slate-900 text-base">Egresos y Gastos Operativos</h3>
+              <p class="text-xs text-slate-500">Registro de pagos a proveedores, servicios e insumos comunes.</p>
+            </div>
+            <button onclick="openNewExpenseModal()" class="px-3.5 py-2 bg-slate-800 text-white rounded-xl text-xs font-semibold hover:bg-slate-700">
+              <i class="fa-solid fa-plus mr-1"></i> Añadir Gasto
+            </button>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr class="bg-slate-50 text-slate-600 border-b border-slate-200">
+                  <th class="p-3 font-semibold">Fecha</th>
+                  <th class="p-3 font-semibold">Categoría</th>
+                  <th class="p-3 font-semibold">Concepto del Gasto</th>
+                  <th class="p-3 font-semibold">Proveedor / Beneficiario</th>
+                  <th class="p-3 font-semibold">Monto</th>
+                  <th class="p-3 font-semibold">Aprobado Por</th>
+                </tr>
+              </thead>
+              <tbody id="admin-expenses-table-body" class="divide-y divide-slate-100">
+                <!-- Renderizado dinámicamente -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ADMIN PESTAÑA 4: REPORTES FINANCIEROS -->
+      <div id="admin-tab-reportes" class="hidden space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- Gráfico Ingresos vs Egresos -->
+          <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-200 p-6 shadow-xs">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="font-bold text-slate-900 text-sm">Flujo Financiero (Ingresos vs. Egresos)</h3>
+              <span class="text-xs text-slate-500">Últimos 6 meses</span>
+            </div>
+            <div class="h-64">
+              <canvas id="financeChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Desglose de Gastos -->
+          <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs">
+            <h3 class="font-bold text-slate-900 text-sm mb-4">Distribución del Gasto</h3>
+            <div class="h-64 flex items-center justify-center">
+              <canvas id="expenseChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Exportación de Reportes -->
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs flex flex-wrap justify-between items-center gap-4">
+          <div>
+            <h4 class="font-bold text-slate-900 text-sm">Exportación para Asambleas y Auditoría</h4>
+            <p class="text-xs text-slate-500">Genera una relación formal de ingresos, adeudos y egresos con corte al día de hoy.</p>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="exportToCSV()" class="px-4 py-2.5 bg-emerald-700 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-xs transition">
+              <i class="fa-solid fa-file-excel"></i> Descargar Reporte en Excel / CSV
+            </button>
+            <button onclick="window.print()" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-semibold flex items-center gap-2 transition">
+              <i class="fa-solid fa-print"></i> Vista Imprimible
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ADMIN PESTAÑA 5: TRAZABILIDAD / AUDITORÍA -->
+      <div id="admin-tab-auditoria" class="hidden space-y-6">
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs">
+          <div class="flex justify-between items-center mb-4">
+            <div>
+              <h3 class="font-bold text-slate-900 text-base">Bitácora de Eventos y Trazabilidad (Auditoría)</h3>
+              <p class="text-xs text-slate-500">Registro inmutable de acciones realizadas en el sistema para cumplimiento y transparencia.</p>
+            </div>
+          </div>
+
+          <div id="audit-logs-container" class="space-y-2 max-h-96 overflow-y-auto pr-2 text-xs">
+            <!-- Renderizado dinámicamente -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ================= MODAL DE PASARELA DE PAGO (Tarjeta / SPEI) ================= -->
+  <div id="modal-payment" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center mb-5 pb-3 border-b border-slate-100">
+        <div>
+          <span class="text-[11px] font-bold text-brand-600 uppercase tracking-wider">Pasarela Segura</span>
+          <h3 class="text-lg font-bold text-slate-900">Liquidar Cuota</h3>
+        </div>
+        <button onclick="closePaymentModal()" class="text-slate-400 hover:text-slate-600 text-lg">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Resumen de Cuota Seleccionada -->
+      <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200 mb-6">
+        <div class="flex justify-between items-center mb-1">
+          <span class="text-xs text-slate-500" id="pay-fee-concept">Mantenimiento Mensual</span>
+          <span class="text-base font-extrabold text-slate-900" id="pay-fee-amount">$1,200.00 MXN</span>
+        </div>
+        <div class="text-[11px] text-slate-500 flex justify-between">
+          <span>Periodo: <strong id="pay-fee-period">Octubre 2026</strong></span>
+          <span>Lote: <strong id="pay-fee-lot">Lote 14</strong></span>
+        </div>
+      </div>
+
+      <!-- Selector de Método de Pago -->
+      <div class="mb-6">
+        <label class="block text-xs font-bold text-slate-700 mb-2">Selecciona Método de Pago</label>
+        <div class="grid grid-cols-2 gap-3">
+          <button type="button" onclick="selectPaymentMethod('card')" id="btn-method-card" class="payment-method-btn p-3.5 rounded-2xl border-2 border-brand-500 bg-brand-50/50 flex flex-col items-center gap-1.5 transition">
+            <i class="fa-solid fa-credit-card text-brand-600 text-lg"></i>
+            <span class="text-xs font-bold text-slate-800">Tarjeta Débito/Crédito</span>
+            <span class="text-[10px] text-slate-500">Aprobación inmediata</span>
+          </button>
+          <button type="button" onclick="selectPaymentMethod('spei')" id="btn-method-spei" class="payment-method-btn p-3.5 rounded-2xl border-2 border-slate-200 hover:border-slate-300 flex flex-col items-center gap-1.5 transition">
+            <i class="fa-solid fa-building-columns text-slate-600 text-lg"></i>
+            <span class="text-xs font-bold text-slate-800">Transferencia SPEI</span>
+            <span class="text-[10px] text-slate-500">Verificación manual</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- FORMULARIO 1: TARJETA DE CRÉDITO / DÉBITO -->
+      <form id="form-pay-card" onsubmit="processCardPayment(event)" class="space-y-4">
+        <!-- Tarjeta Visual Interactiva -->
+        <div class="bg-gradient-to-tr from-slate-900 via-slate-800 to-brand-900 text-white p-5 rounded-2xl shadow-lg relative overflow-hidden mb-4">
+          <div class="flex justify-between items-center mb-6">
+            <span class="text-xs text-slate-300 font-mono tracking-widest">VALLE HERMOSO PAY</span>
+            <i class="fa-brands fa-cc-visa text-2xl text-slate-200"></i>
+          </div>
+          <div class="font-mono text-base tracking-widest mb-4" id="card-preview-number">•••• •••• •••• 4242</div>
+          <div class="flex justify-between items-center text-[10px]">
+            <div>
+              <span class="text-slate-400 block uppercase">Titular</span>
+              <span class="font-semibold" id="card-preview-holder">CARLOS RAMIREZ</span>
+            </div>
+            <div>
+              <span class="text-slate-400 block uppercase">Vence</span>
+              <span class="font-semibold" id="card-preview-exp">12/28</span>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Nombre en la Tarjeta</label>
+          <input type="text" id="card-holder" required value="Carlos Ramírez Morales" class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:border-brand-500 uppercase">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Número de Tarjeta (16 dígitos)</label>
+          <div class="relative">
+            <input type="text" id="card-number" required maxlength="19" placeholder="4242 4242 4242 4242" value="4242 4242 4242 4242" class="w-full text-xs font-mono px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:border-brand-500">
+            <span class="absolute right-3 top-2.5 text-slate-400"><i class="fa-solid fa-lock text-xs"></i></span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Expiración (MM/AA)</label>
+            <input type="text" id="card-exp" required maxlength="5" placeholder="12/28" value="12/28" class="w-full text-xs font-mono px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:border-brand-500 text-center">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Código de Seguridad (CVV)</label>
+            <input type="password" id="card-cvv" required maxlength="4" placeholder="123" value="123" class="w-full text-xs font-mono px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:border-brand-500 text-center">
+          </div>
+        </div>
+
+        <div class="p-3 bg-emerald-50 rounded-xl text-[11px] text-emerald-800 border border-emerald-200">
+          <i class="fa-solid fa-shield-halved mr-1"></i> Cumplimiento conceptual <strong>PCI DSS</strong>: Los datos sensibles no son almacenados en la base de datos del fraccionamiento.
+        </div>
+
+        <button type="submit" id="btn-submit-card" class="w-full py-3 bg-brand-600 hover:bg-brand-500 text-white rounded-xl font-bold text-xs shadow-lg shadow-brand-600/30 flex items-center justify-center gap-2 transition">
+          <i class="fa-solid fa-lock"></i> Pagar Ahora (<span id="btn-card-amount">$1,200.00 MXN</span>)
+        </button>
+      </form>
+
+      <!-- FORMULARIO 2: TRANSFERENCIA SPEI -->
+      <div id="form-pay-spei" class="hidden space-y-4">
+        <div class="p-4 bg-sky-50 rounded-2xl border border-sky-200 space-y-2 text-xs text-sky-900">
+          <div class="flex justify-between">
+            <span class="text-sky-700">Banco Receptor:</span>
+            <strong class="font-bold">BBVA México</strong>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-sky-700">Beneficiario:</span>
+            <strong class="font-bold">Asociación Valle Hermoso A.C.</strong>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-sky-700">CLABE Interbancaria:</span>
+            <code class="bg-white px-2 py-0.5 rounded border border-sky-200 font-mono font-bold text-slate-900 text-[11px]">0123 2001 5948 3920 11</code>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-sky-700">Concepto / Referencia Única:</span>
+            <code class="bg-amber-100 text-amber-900 px-2 py-0.5 rounded font-mono font-bold text-[11px]" id="spei-unique-ref">VH-L14-202610</code>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Adjuntar o Simular Comprobante Bancario</label>
+          <div class="border-2 border-dashed border-slate-300 rounded-2xl p-4 text-center hover:bg-slate-50 transition cursor-pointer" onclick="simulateFileUpload()">
+            <i class="fa-solid fa-cloud-arrow-up text-2xl text-slate-400 mb-1"></i>
+            <p class="text-xs font-semibold text-slate-700" id="upload-status-text">Clic para adjuntar recibo de transferencia (PDF/JPG)</p>
+            <p class="text-[10px] text-slate-400">Simulación interactiva para prueba del prototipo</p>
+          </div>
+        </div>
+
+        <button type="button" onclick="submitSpeiTransfer()" class="w-full py-3 bg-accent-600 hover:bg-accent-500 text-white rounded-xl font-bold text-xs shadow-lg shadow-accent-600/30 flex items-center justify-center gap-2 transition">
+          <i class="fa-solid fa-paper-plane"></i> Enviar Pago a Conciliación
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL DE COMPROBANTE OFICIAL / RECIBO (Imprimible) ================= -->
+  <div id="modal-receipt" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200 max-h-[95vh] overflow-y-auto">
+      <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-100 no-print">
+        <span class="text-xs font-bold text-emerald-600 flex items-center gap-1.5">
+          <i class="fa-solid fa-circle-check"></i> Comprobante Oficial Generado
+        </span>
+        <div class="flex items-center gap-2">
+          <button onclick="printReceipt()" class="px-3 py-1 bg-slate-800 text-white rounded-lg text-xs font-semibold hover:bg-slate-700 flex items-center gap-1">
+            <i class="fa-solid fa-print"></i> Imprimir / Guardar PDF
+          </button>
+          <button onclick="closeReceiptModal()" class="text-slate-400 hover:text-slate-600 text-base">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Plantilla de Comprobante / Recibo -->
+      <div id="receipt-printable-area" class="border border-slate-200 rounded-2xl p-6 bg-white space-y-4">
+        <!-- Encabezado del Recibo -->
+        <div class="flex justify-between items-start border-b border-slate-200 pb-4">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-brand-700 text-white flex items-center justify-center text-lg">
+              <i class="fa-solid fa-tree-city"></i>
+            </div>
+            <div>
+              <h2 class="font-extrabold text-slate-900 text-base">Fraccionamiento Valle Hermoso</h2>
+              <p class="text-[10px] text-slate-500">Asociación de Colonos y Residentes A.C.</p>
+              <p class="text-[10px] text-slate-400">Zapopan, Jalisco • RFC: AVH200815AA1</p>
+            </div>
+          </div>
+          <div class="text-right">
+            <span class="text-[10px] uppercase font-bold text-slate-400 block">Folio Digital</span>
+            <span class="font-mono font-bold text-brand-700 text-sm" id="rec-folio">VH-2026-0842</span>
+          </div>
+        </div>
+
+        <!-- Detalles del Residente y Fecha -->
+        <div class="grid grid-cols-2 gap-4 text-xs bg-slate-50 p-3.5 rounded-xl">
+          <div>
+            <span class="text-slate-400 text-[10px] block">Residente:</span>
+            <strong class="text-slate-800" id="rec-resident">Carlos Ramírez Morales</strong>
+            <span class="text-slate-500 block text-[11px]" id="rec-lot">Lote 14 • Calle Los Pinos</span>
+          </div>
+          <div class="text-right">
+            <span class="text-slate-400 text-[10px] block">Fecha de Pago:</span>
+            <strong class="text-slate-800" id="rec-date">11 de Octubre de 2026</strong>
+            <span class="text-slate-500 block text-[11px]" id="rec-method">Tarjeta Débito (Visa *4242)</span>
+          </div>
+        </div>
+
+        <!-- Concepto e Importe -->
+        <div class="border-t border-b border-slate-200 py-3">
+          <div class="flex justify-between text-xs py-1">
+            <span class="text-slate-700" id="rec-concept">Cuota de Mantenimiento Ordinario - Octubre 2026</span>
+            <span class="font-semibold text-slate-900" id="rec-subtotal">$1,200.00 MXN</span>
+          </div>
+          <div class="flex justify-between text-xs py-1 text-slate-500">
+            <span>Comisión por procesamiento digital</span>
+            <span>$0.00 MXN</span>
+          </div>
+          <div class="flex justify-between text-sm font-bold text-slate-900 pt-2 border-t border-slate-100 mt-2">
+            <span>Total Pagado:</span>
+            <span class="text-brand-700" id="rec-total">$1,200.00 MXN</span>
+          </div>
+        </div>
+
+        <!-- Sello Digital y Código QR -->
+        <div class="flex items-center gap-4 pt-2">
+          <div id="qrcode-container" class="shrink-0 p-1.5 bg-white border border-slate-200 rounded-lg"></div>
+          <div class="text-[9px] text-slate-500 leading-tight space-y-1">
+            <span class="font-bold text-slate-700 block">Cadena de Certificación Digital:</span>
+            <p class="font-mono text-slate-400 break-all" id="rec-digital-seal">||VH|2026-10-11T12:00:00|1200.00|LOTE14|SHA256:7f8a9e0b1c2d3e4f5a6b7c8d9e0f||</p>
+            <p class="text-slate-400">Este comprobante digital cuenta con validez interna para acreditar la solvencia de cuotas del fraccionamiento.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL DE REGISTRO DE NUEVA CUOTA (ADMIN) ================= -->
+  <div id="modal-new-fee" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="font-bold text-base text-slate-900">Emitir Nueva Cuota General</h3>
+        <button onclick="closeNewFeeModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form onsubmit="handleCreateFeeSubmit(event)" class="space-y-4 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Concepto de la Cuota</label>
+          <input type="text" id="new-fee-concept" required placeholder="Ej. Cuota Extraordinaria Pintura y Caseta" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:border-brand-500">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Monto (MXN)</label>
+            <input type="number" id="new-fee-amount" required min="50" step="10" placeholder="500" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:border-brand-500">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Periodo</label>
+            <input type="text" id="new-fee-period" required placeholder="Noviembre 2026" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:border-brand-500">
+          </div>
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Fecha Límite de Pago</label>
+          <input type="date" id="new-fee-due" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:border-brand-500">
+        </div>
+        <div class="p-3 bg-slate-50 rounded-xl text-[11px] text-slate-500 border border-slate-200">
+          <i class="fa-solid fa-circle-nodes mr-1"></i> Se aplicará automáticamente a todos los 25 lotes del padrón vecinal.
+        </div>
+        <button type="submit" class="w-full py-2.5 bg-brand-600 hover:bg-brand-500 text-white font-bold rounded-xl shadow-md transition">
+          Emitir Cuota a Todo el Fraccionamiento
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= MODAL DE REGISTRO DE EGRESO (ADMIN) ================= -->
+  <div id="modal-new-expense" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="font-bold text-base text-slate-900">Registrar Salida / Egreso</h3>
+        <button onclick="closeNewExpenseModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form onsubmit="handleCreateExpenseSubmit(event)" class="space-y-4 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Categoría</label>
+          <select id="exp-category" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:border-brand-500">
+            <option value="Seguridad Privada">Seguridad Privada (Caseta)</option>
+            <option value="Mantenimiento y Jardinería">Mantenimiento y Jardinería</option>
+            <option value="Servicios Públicos (CFE/Agua)">Servicios Públicos (CFE / Agua)</option>
+            <option value="Reparaciones Mayores">Reparaciones Mayores</option>
+            <option value="Administración y Papelería">Administración y Papelería</option>
+          </select>
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Concepto Detallado</label>
+          <input type="text" id="exp-concept" required placeholder="Ej. Quincena personal de vigilancia" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:border-brand-500">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Proveedor / Beneficiario</label>
+            <input type="text" id="exp-vendor" required placeholder="Seguridad Élite S.A." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:border-brand-500">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Monto (MXN)</label>
+            <input type="number" id="exp-amount" required min="10" placeholder="6000" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:border-brand-500">
+          </div>
+        </div>
+        <button type="submit" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl shadow-md transition">
+          Registrar Egreso en Bitácora
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="bg-white border-t border-slate-200 mt-auto py-8 text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-wrap justify-between items-center gap-4">
+      <div>
+        <span class="font-bold text-slate-800">Fraccionamiento Valle Hermoso</span> • Sistema Web Transaccional y Administrativo
+        <p class="text-[11px] text-slate-400 mt-0.5">Diseñado con principios de usabilidad, trazabilidad financiera y separación de roles.</p>
+      </div>
+      <div class="flex items-center gap-4 text-slate-400">
+        <span>UDG Virtual • Proyecto VI / VII</span>
+        <span>•</span>
+        <span>Pedro Pablo Rodríguez Gómez</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Script Principal de la Aplicación -->
+  <script src="app.js"></script>
+</body>
+</html>
