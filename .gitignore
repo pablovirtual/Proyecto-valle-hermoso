@@ -17,3 +17,12 @@ desktop.ini
 
 # Registros y temporales
 *.log
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.env
+.env.local
+.env.*.local
