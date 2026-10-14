@@ -1,11 +1,5 @@
--- ==============================================================================
--- Sistema Web de Pagos para el Fraccionamiento Valle Hermoso
--- Script DDL de Base de Datos para PostgreSQL / Supabase
--- ==============================================================================
-
--- 1. Tabla: Residentes
--- Almacena la información de los usuarios y sus credenciales de acceso al portal.
-CREATE TABLE IF NOT EXISTS Residentes (
+-- 1. Tabla: residentes (Se crea primero)
+CREATE TABLE IF NOT EXISTS public.residentes (
     id_residente SERIAL PRIMARY KEY,
     nombre VARCHAR(120) NOT NULL,
     correo VARCHAR(120) UNIQUE NOT NULL,
@@ -13,56 +7,61 @@ CREATE TABLE IF NOT EXISTS Residentes (
     rol VARCHAR(20) NOT NULL DEFAULT 'Residente' CHECK (rol IN ('Residente', 'Administrador'))
 );
 
--- 2. Tabla: Cuotas
--- Registra los cargos mensuales ordinarios o extraordinarios asignados a cada residente/lote.
-CREATE TABLE IF NOT EXISTS Cuotas (
+-- 2. Tabla: cuotas (Depende de residentes)
+CREATE TABLE IF NOT EXISTS public.cuotas (
     id_cuota SERIAL PRIMARY KEY,
-    id_residente INT NOT NULL REFERENCES Residentes(id_residente) ON DELETE CASCADE,
+    id_residente INT NOT NULL REFERENCES public.residentes(id_residente) ON DELETE CASCADE,
     monto NUMERIC(10, 2) NOT NULL CHECK (monto >= 0),
     estado VARCHAR(20) NOT NULL DEFAULT 'Pendiente' CHECK (estado IN ('Pendiente', 'Pagado', 'Atrasado'))
 );
 
--- 3. Tabla: Pagos
--- Documenta las transacciones y liquidaciones efectuadas sobre las cuotas emitidas.
-CREATE TABLE IF NOT EXISTS Pagos (
+-- 3. Tabla: pagos (Depende de cuotas)
+CREATE TABLE IF NOT EXISTS public.pagos (
     id_pago SERIAL PRIMARY KEY,
-    id_cuota INT NOT NULL REFERENCES Cuotas(id_cuota) ON DELETE CASCADE,
+    id_cuota INT NOT NULL REFERENCES public.cuotas(id_cuota) ON DELETE CASCADE,
     monto NUMERIC(10, 2) NOT NULL CHECK (monto > 0),
     fecha TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Índices para optimizar consultas frecuentes
-CREATE INDEX IF NOT EXISTS idx_residentes_correo ON Residentes(correo);
-CREATE INDEX IF NOT EXISTS idx_cuotas_residente ON Cuotas(id_residente);
-CREATE INDEX IF NOT EXISTS idx_pagos_cuota ON Pagos(id_cuota);
+-- Índices de consulta rápida
+CREATE INDEX IF NOT EXISTS idx_residentes_correo ON public.residentes(correo);
+CREATE INDEX IF NOT EXISTS idx_cuotas_residente ON public.cuotas(id_residente);
+CREATE INDEX IF NOT EXISTS idx_pagos_cuota ON public.pagos(id_cuota);
 
--- ==============================================================================
--- Datos iniciales de prueba (Semilla / Seeding)
--- Las contraseñas aquí registradas corresponden al texto plano: "Admin123!" y "Residente123!"
--- Hacheadas con bcrypt (salt round = 10)
--- ==============================================================================
+-- Habilitar Row Level Security (RLS) para satisfacer a Supabase
+ALTER TABLE public.residentes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.cuotas ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.pagos ENABLE ROW LEVEL SECURITY;
 
--- Usuario Administrador
-INSERT INTO Residentes (nombre, correo, password, rol)
+-- Políticas de acceso para permitir que el backend consulte y registre datos
+DROP POLICY IF EXISTS "Acceso total residentes" ON public.residentes;
+CREATE POLICY "Acceso total residentes" ON public.residentes FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Acceso total cuotas" ON public.cuotas;
+CREATE POLICY "Acceso total cuotas" ON public.cuotas FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Acceso total pagos" ON public.pagos;
+CREATE POLICY "Acceso total pagos" ON public.pagos FOR ALL USING (true) WITH CHECK (true);
+
+-- Vistas de compatibilidad (Permite consultas como 'residentes' o 'Residentes')
+CREATE OR REPLACE VIEW public."Residentes" AS SELECT * FROM public.residentes;
+CREATE OR REPLACE VIEW public."Cuotas" AS SELECT * FROM public.cuotas;
+CREATE OR REPLACE VIEW public."Pagos" AS SELECT * FROM public.pagos;
+
+-- Inserción de usuarios iniciales de prueba (Admin123! y Residente123!)
+INSERT INTO public.residentes (nombre, correo, password, rol)
 VALUES 
-('Administración Valle Hermoso', 'admin@vallehermoso.mx', '$2a$10$wT0vV2U7j2/U4mBf7jHwze.f/O3n8W1Zf7fVoml6yV0tA/5JtS2eq', 'Administrador')
-ON CONFLICT (correo) DO NOTHING;
-
--- Usuario Residente (Ejemplo: Carlos Ramírez - Lote 14)
-INSERT INTO Residentes (nombre, correo, password, rol)
-VALUES 
+('Administración Valle Hermoso', 'admin@vallehermoso.mx', '$2a$10$wT0vV2U7j2/U4mBf7jHwze.f/O3n8W1Zf7fVoml6yV0tA/5JtS2eq', 'Administrador'),
 ('Carlos Ramírez Gómez', 'carlos.ramirez@vallehermoso.mx', '$2a$10$8hWj4E5vX2uLz1x7A5K9Ce/0N3V9r8qW7iY1oT2lS3kP4jO5i6u7y', 'Residente')
 ON CONFLICT (correo) DO NOTHING;
 
--- Cuotas de ejemplo para Carlos Ramírez (id_residente = 2)
-INSERT INTO Cuotas (id_residente, monto, estado)
+INSERT INTO public.cuotas (id_residente, monto, estado)
 VALUES 
 (2, 1200.00, 'Pagado'),
 (2, 1200.00, 'Pendiente')
 ON CONFLICT DO NOTHING;
 
--- Pago registrado para la primera cuota
-INSERT INTO Pagos (id_cuota, monto, fecha)
+INSERT INTO public.pagos (id_cuota, monto, fecha)
 VALUES 
 (1, 1200.00, CURRENT_TIMESTAMP)
 ON CONFLICT DO NOTHING;

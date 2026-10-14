@@ -88,10 +88,14 @@ app.use((err, req, res, next) => {
 // ==============================================================================
 // Arranque del Servidor HTTP
 // ==============================================================================
-app.listen(PORT, () => {
-  console.log('==============================================================');
-  console.log(`🚀 Servidor ejecutándose en el puerto: ${PORT}`);
-  console.log(`📡 URL Base: http://localhost:${PORT}`);
-  console.log(`🔒 Capa de Seguridad JWT: Habilitada en rutas POST/PUT/DELETE`);
-  console.log('==============================================================');
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log('==============================================================');
+    console.log(`🚀 Servidor ejecutándose en el puerto: ${PORT}`);
+    console.log(`📡 URL Base: http://localhost:${PORT}`);
+    console.log(`🔒 Capa de Seguridad JWT: Habilitada en rutas POST/PUT/DELETE`);
+    console.log('==============================================================');
+  });
+}
+
+module.exports = app;

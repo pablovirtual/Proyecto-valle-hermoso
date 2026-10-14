@@ -6,8 +6,9 @@
 const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config();
 
-// Extracción de las variables de entorno necesarias para la conexión
-const supabaseUrl = process.env.SUPABASE_URL;
+// Extracción y sanitización de las variables de entorno necesarias para la conexión
+const rawUrl = process.env.SUPABASE_URL || '';
+const supabaseUrl = rawUrl.replace(/\/rest\/v1\/?$/, '').replace(/\/+$/, '');
 const supabaseKey = process.env.SUPABASE_KEY;
 
 // Validación preventiva de configuración
