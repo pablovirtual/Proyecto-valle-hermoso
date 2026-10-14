@@ -11,6 +11,7 @@ const cors = require('cors');
 // Importación de módulos de rutas
 const authRoutes = require('./routes/auth');
 const cuotasRoutes = require('./routes/cuotas');
+const pagosRoutes = require('./routes/pagos');
 
 // Inicialización de la aplicación Express
 const app = express();
@@ -42,7 +43,7 @@ app.use((req, res, next) => {
 app.get('/', (req, res) => {
   res.status(200).json({
     sistema: 'API REST - Sistema Web de Pagos del Fraccionamiento Valle Hermoso',
-    version: '1.0.0',
+    version: '1.1.0',
     estado: 'Servicio en línea',
     documentacion_endpoints: {
       auth: {
@@ -51,10 +52,18 @@ app.get('/', (req, res) => {
       },
       cuotas: {
         listar: 'GET /api/cuotas',
+        filtrar: 'GET /api/cuotas?id_residente=X&estado=Y',
         detalle: 'GET /api/cuotas/:id',
         crear: 'POST /api/cuotas [Protegido con JWT]',
         actualizar: 'PUT /api/cuotas/:id [Protegido con JWT]',
         eliminar: 'DELETE /api/cuotas/:id [Protegido con JWT]'
+      },
+      pagos: {
+        listar: 'GET /api/pagos [Protegido con JWT]',
+        por_residente: 'GET /api/pagos/residente/:id [Protegido con JWT]',
+        detalle: 'GET /api/pagos/:id [Protegido con JWT]',
+        registrar: 'POST /api/pagos [Protegido con JWT — actualiza cuota a Pagado]',
+        eliminar: 'DELETE /api/pagos/:id [Protegido con JWT — revierte cuota a Pendiente]'
       }
     }
   });
@@ -63,6 +72,7 @@ app.get('/', (req, res) => {
 // Montaje de enrutadores modulares (Patrón MVC)
 app.use('/api/auth', authRoutes);
 app.use('/api/cuotas', cuotasRoutes);
+app.use('/api/pagos', pagosRoutes);
 
 // ==============================================================================
 // Manejadores de Excepciones y Errores

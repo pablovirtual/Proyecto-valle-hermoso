@@ -37,6 +37,9 @@
   <!-- Canvas Confetti para confirmaciones de pago -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
+  <!-- API Service Layer — Capa de comunicación con el backend Express + Supabase -->
+  <script src="api-service.js"></script>
+
   <!-- Estilos Personalizados -->
   <link rel="stylesheet" href="styles.css">
 
@@ -93,9 +96,15 @@
             <option value="admin">🛡️ Panel Administrativo (Mesa Directiva)</option>
           </select>
         </div>
+        <!-- Botón de Reinicio de Datos -->
         <button onclick="resetDemoData()" title="Reiniciar datos de prueba" class="text-slate-400 hover:text-rose-400 text-xs transition flex items-center gap-1">
           <i class="fa-solid fa-rotate-left"></i> <span class="hidden md:inline">Reiniciar Datos</span>
         </button>
+        <!-- Indicador de Conexión con Backend API -->
+        <div id="api-status-badge" class="flex items-center gap-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-slate-700 text-slate-400 border border-slate-600" title="Estado de conexión con el backend API">
+          <span class="w-1.5 h-1.5 rounded-full bg-slate-500 inline-block" id="api-status-dot"></span>
+          <span id="api-status-text">API...</span>
+        </div>
       </div>
     </div>
   </div>
