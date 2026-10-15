@@ -1,123 +1,180 @@
 # Sistema Web de Pagos para el Fraccionamiento Valle Hermoso
 
 [![GitHub Pages](https://img.shields.io/badge/Demo_en_Vivo-GitHub_Pages-059669?style=for-the-badge&logo=github)](https://pablovirtual.github.io/Proyecto-valle-hermoso/)
-[![Estado](https://img.shields.io/badge/Prototipo-Funcional_100%25-0284c7?style=for-the-badge)](https://pablovirtual.github.io/Proyecto-valle-hermoso/)
+[![Backend Status](https://img.shields.io/badge/API_REST-Node.js_+_Supabase_+_JWT-0284c7?style=for-the-badge&logo=node.js)](backend/)
+[![Pruebas](https://img.shields.io/badge/Pruebas_Integrales-7%2F7_Pasadas_(100%25)-10b981?style=for-the-badge)](backend/test-api.js)
 
-**Prototipo Web Funcional e Interactivo**  
+**Plataforma Integral de Servicios Web y Control Financiero**  
 *Universidad de Guadalajara — UDG Virtual*  
-- **Materia:** Proyecto VI / VII  
 - **Estudiante y Desarrollador:** Pedro Pablo Rodríguez Gómez  
-- **Docente:** Mtra. Úrsula del Pilar González Robles  
+- **Proyecto VI / VII:** Mtra. Úrsula del Pilar González Robles  
+- **Tendencias en Diseños de Servicios (Actividad 3):** Mtro. Oscar Gregorio Silva Mares  
 
 🌐 **Acceso Directo en Línea (Demo GitHub Pages):**  
 👉 **[https://pablovirtual.github.io/Proyecto-valle-hermoso/](https://pablovirtual.github.io/Proyecto-valle-hermoso/)**
 
 ---
 
-## 📌 Contexto y Problemática
+## 📌 Contexto y Propuesta de Solución
 
-En el **Fraccionamiento Valle Hermoso**, la administración vecinal controla cuotas y pagos mediante canales dispersos y hojas de cálculo desconectadas. Esto provoca:
-1. Dificultad para consultar adeudos y estados de cuenta en tiempo real.
-2. Comprobantes de transferencia extraviados o de difícil identificación.
-3. Riego de capturas duplicadas y retrasos en la conciliación bancaria.
-4. Falta de transparencia y retraso en reportes financieros para la asamblea general.
+En el **Fraccionamiento Valle Hermoso**, la administración vecinal controlaba cuotas y pagos mediante canales dispersos y hojas de cálculo desconectadas, ocasionando morosidad, comprobantes extraviados y falta de transparencia.
 
-### 💡 Propuesta de Solución
-Un **Sistema Web Transaccional y Administrativo** que centraliza la administración de cuotas, el registro y consulta de pagos, la generación inmediata de comprobantes digitales, la solicitud de facturación fiscal (CFDI 4.0) y la elaboración de reportes de ingresos y egresos.
+La solución es una **Infraestructura de Servicios Web Integral** compuesta por:
+1. **Frontend SPA Interactivo:** Portal para residentes y panel administrativo para la mesa directiva con pagos con tarjeta, referencias SPEI y recibos digitales con código QR.
+2. **Backend API REST Modular (Patrón MVC):** Servidor en **Node.js** y **Express** con persistencia en **Supabase (PostgreSQL)** y autenticación mediante **JSON Web Tokens (JWT)**.
+3. **Capa de Integración en Tiempo Real (`api-service.js`):** Comunicación asíncrona entre cliente y servidor con tolerancia a fallos (*Offline Fallback* en `LocalStorage` cuando el servidor no esté en ejecución).
 
 ---
 
-## 🚀 Cómo Ejecutar el Prototipo
+## 🏗️ Arquitectura de la Solución (End-to-End)
 
-El prototipo está diseñado para ejecutarse sin complicaciones de dependencias pesadas:
-
-### Opción 1: Mediante Servidor Local Python (Recomendada)
-Haz doble clic en el archivo:
 ```
-start-prototype.bat
+┌────────────────────────────────────────────────────────┐
+│                   FRONTEND (SPA Web)                   │
+│   index.html + app.js + styles.css + Tailwind + QR     │
+└───────────────────────────┬────────────────────────────┘
+                            │ Fetch HTTP + JWT (sessionStorage)
+                            ▼
+┌────────────────────────────────────────────────────────┐
+│               CAPA DE SERVICIO CLIENTE                 │
+│                     api-service.js                     │
+└───────────────────────────┬────────────────────────────┘
+                            │ REST JSON (Bearer Token)
+                            ▼
+┌────────────────────────────────────────────────────────┐
+│             BACKEND API REST (Express / MVC)           │
+│   ├── routes/ (auth, cuotas, pagos)                    │
+│   ├── middlewares/auth.js (Verificador JWT / RBAC)     │
+│   └── controllers/ (auth, cuotas, pagos)               │
+└───────────────────────────┬────────────────────────────┘
+                            │ @supabase/supabase-js
+                            ▼
+┌────────────────────────────────────────────────────────┐
+│           BASE DE DATOS NUBE (Supabase BaaS)           │
+│   PostgreSQL: Tablas residentes, cuotas, pagos + RLS   │
+└────────────────────────────────────────────────────────┘
 ```
-O ejecuta en la terminal:
-```bash
-python server.py
-```
-*Se abrirá automáticamente tu navegador en `http://localhost:8080`.*
-
-### Opción 2: Abrir Directamente en el Navegador
-Simplemente haz doble clic o abre el archivo [index.html](file:///c:/Users/ferra/OneDrive/Escritorio/Proyecto%20valle%20hermoso/index.html) en Google Chrome o Microsoft Edge.
 
 ---
 
-## 🛠️ Módulos y Funcionalidades del Prototipo
+## 🛠️ Módulos y Funcionalidades del Sistema
 
 ### 1. 🌐 Portal Público / Landing Page
-- Información general del Fraccionamiento Valle Hermoso.
-- Cuotas del periodo (Mantenimiento ordinario mensual de $1,200 MXN).
+- Información general del fraccionamiento y monto de cuotas del periodo ($1,200 MXN).
 - Avisos comunitarios, proyectos de mejora común y normativas fiscales.
-- Acceso rápido a inicio de sesión con roles diferenciados.
+- Acceso rápido a inicio de sesión con roles diferenciados (**Residente** y **Administrador**).
 
 ### 2. 👤 Portal del Residente (Lote 14 - Carlos Ramírez)
-- **Estado de Cuenta en Vivo:** Visualización de cuotas pendientes, fechas de vencimiento y monto total.
-- **Pasarela de Pago Simulada:**
-  - **Tarjeta de Débito/Crédito:** Formulario con validación visual interactiva, enmascaramiento de datos, cumplimiento conceptual con el estándar **PCI DSS** (sin almacenamiento de CVV ni número completo en BD) y confirmación inmediata con animación y folio de transacción.
-  - **Transferencia SPEI:** Instrucciones interbancarias (Banco BBVA, CLABE y Beneficiario), generación de **Referencia Única Alfanumérica** (`VH-L14-202610`), simulación de carga de comprobante y pase a la bandeja de conciliación.
-- **Comprobante Digital / Recibo Oficial:**
+- **Estado de Cuenta en Vivo:** Sincronizado en tiempo real con Supabase (`GET /api/cuotas?id_residente=2`).
+- **Pasarela de Pago Transaccional:**
+  - **Tarjeta de Débito/Crédito:** Validación interactiva, cumplimiento conceptual PCI DSS y registro directo en la tabla `pagos` de Supabase con `POST /api/pagos`.
+  - **Transferencia SPEI:** Instrucciones interbancarias (BBVA), generación de referencia única alfanumérica (`VH-L14-202610`) y pase a bandeja de conciliación.
+- **Comprobante Digital Oficial:**
   - Folio único institucional (ej. `VH-2026-0842`).
-  - Sello digital simulado (SHA-256).
-  - **Código QR dinámico** generado en tiempo real con cadena de verificación.
-  - Botón de **Imprimir / Guardar en PDF** con estilos optimizados para impresión.
-- **Historial de Transacciones:** Consulta de todos los pagos realizados, montos, métodos y estatus.
-- **Módulo de Facturación (CFDI 4.0):** Captura y persistencia de RFC, Razón Social, Régimen Fiscal, Uso de CFDI y Código Postal.
+  - Sello digital criptográfico SHA-256.
+  - **Código QR dinámico** con cadena de verificación.
+  - Botón de imprimir y guardar en PDF.
+- **Historial de Pagos:** Consulta de liquidaciones pasadas registradas en la base de datos.
+- **Módulo de Facturación (CFDI 4.0):** Captura de RFC, Razón Social, Régimen Fiscal y Código Postal.
 
 ### 3. 🛡️ Panel Administrativo (Mesa Directiva)
-- **Dashboard Ejecutivo:** KPIs en tiempo real (Recaudación del mes, Cartera vencida / Morosidad, Pagos pendientes por conciliar y Egresos operativos).
-- **Bandeja de Conciliación de Pagos:** Lista de transferencias SPEI reportadas por los residentes. El administrador puede verificar el comprobante y con un solo clic:
-  - **Aprobar:** Actualiza la cuota a pagada, rebaja el saldo del residente y genera el recibo.
-  - **Rechazar con Nota:** Permite ingresar observaciones (ej. "Monto incompleto").
-- **Padrón de 25 Lotes y Residentes:** Directorio vecinal completo con estatus de cuota ("Al corriente" o "Con adeudo"), saldos, contactos y buscador en tiempo real.
-- **Emisión de Cuotas Generales:** Creación de cuotas ordinarias o extraordinarias que se aplican automáticamente a los 25 lotes.
-- **Libro de Egresos:** Registro de gastos operativos (seguridad caseta, CFE luminarias, jardinería, mantenimiento alberca).
-- **Reportes Financieros Interactivos:** Gráficas con **Chart.js** (Flujo mensual de ingresos vs. egresos y distribución porcentual del gasto).
-- **Exportación a CSV / Excel:** Generación automática de archivo descargable con el balance y movimientos.
-- **Bitácora de Trazabilidad / Auditoría:** Registro cronológico de acciones sensibles realizadas por usuarios o el sistema.
+- **Dashboard Ejecutivo:** KPIs en vivo (recaudación mensual, cartera vencida, pagos por conciliar y egresos).
+- **Bandeja de Conciliación SPEI:** Aprobación de transferencias reportadas que liquida la cuota en Supabase de forma atómica.
+- **Padrón Vecinal de 25 Lotes:** Directorio completo con estatus de cuota ("Al corriente" o "Con adeudo") y buscador interactivo.
+- **Emisión de Cuotas Generales:** Creación de cuotas ordinarias o extraordinarias persistidas en la nube con `POST /api/cuotas`.
+- **Libro de Egresos:** Registro de gastos operativos (seguridad caseta, CFE, jardinería).
+- **Reportes Financieros:** Gráficas con **Chart.js** y exportación automática a formato **CSV / Excel**.
+- **Bitácora de Auditoría:** Trazabilidad cronológica de acciones sensibles.
 
 ---
 
-## 💾 Persistencia de Datos
-El prototipo utiliza `LocalStorage` para mantener todos los cambios entre recargas (pagos efectuados, transferencias conciliadas, nuevas cuotas o egresos).
-- Incluye un botón **"Reiniciar Datos"** en la barra superior para restaurar el estado demo en cualquier momento.
+## 🔒 Capa de Seguridad (JSON Web Token - JWT)
+
+Las operaciones transaccionales y mutadoras están protegidas por el middleware [`backend/middlewares/auth.js`](file:///c:/Users/ferra/OneDrive/Escritorio/Proyecto%20valle%20hermoso/backend/middlewares/auth.js):
+
+- **Login (`POST /api/auth/login`):** Valida credenciales contra la tabla `residentes` usando `bcryptjs` (salt rounds = 10) y emite un token JWT firmado válido por 8 horas.
+- **Cabecera HTTP:** `Authorization: Bearer <token_jwt>` requerida en todas las operaciones de escritura.
+- **Validaciones:**
+  - Ausencia de token → `HTTP 401 Unauthorized`.
+  - Token expirado → `HTTP 401 Unauthorized`.
+  - Firma alterada o token corrupto → `HTTP 403 Forbidden`.
+- **Control de Roles (RBAC):** Privilegios diferenciados entre `Residente` y `Administrador`.
 
 ---
 
-## 📂 Archivos del Proyecto
-- [index.html](file:///c:/Users/ferra/OneDrive/Escritorio/Proyecto%20valle%20hermoso/index.html) — Interfaz principal responsiva (SPA).
-- [api-service.js](file:///c:/Users/ferra/OneDrive/Escritorio/Proyecto%20valle%20hermoso/api-service.js) — Capa de servicio e integración con la API REST (Node.js/Express) y gestión de tokens JWT.
-- [app.js](file:///c:/Users/ferra/OneDrive/Escritorio/Proyecto%20valle%20hermoso/app.js) — Lógica de negocio, conexión bidireccional con Supabase y pasarela transaccional.
-- [styles.css](file:///c:/Users/ferra/OneDrive/Escritorio/Proyecto%20valle%20hermoso/styles.css) — Estilos personalizados y vista de impresión para recibos.
-- [backend/](file:///c:/Users/ferra/OneDrive/Escritorio/Proyecto%20valle%20hermoso/backend) — Servidor API REST con Express, Supabase (PostgreSQL), JWT y CRUD de Residentes, Cuotas y Pagos.
-- [server.py](file:///c:/Users/ferra/OneDrive/Escritorio/Proyecto%20valle%20hermoso/server.py) — Servidor HTTP local con apertura automática del navegador.
-- [start-prototype.bat](file:///c:/Users/ferra/OneDrive/Escritorio/Proyecto%20valle%20hermoso/start-prototype.bat) — Lanzador ejecutable para Windows.
-- [404.html](file:///c:/Users/ferra/OneDrive/Escritorio/Proyecto%20valle%20hermoso/404.html) — Página de redirección para rutas no encontradas en GitHub Pages.
-- [.nojekyll](file:///c:/Users/ferra/OneDrive/Escritorio/Proyecto%20valle%20hermoso/.nojekyll) — Indicador para servir archivos estáticos directamente sin procesamiento Jekyll.
-- [.github/workflows/deploy.yml](file:///c:/Users/ferra/OneDrive/Escritorio/Proyecto%20valle%20hermoso/.github/workflows/deploy.yml) — Flujo de trabajo de GitHub Actions para despliegue automatizado.
+## 🚀 Guía de Ejecución Rápida
+
+### Opción A: Sistema Completo (Frontend + Backend API + Supabase)
+
+1. **Iniciar el Backend (API REST en Node.js):**
+   ```bash
+   cd backend
+   npm install
+   npm start
+   ```
+   *El servidor arrancará en `http://localhost:3000` con la base de datos Supabase conectada.*
+
+2. **Iniciar el Frontend:**
+   - Haz doble clic en `start-prototype.bat` o ejecuta:
+     ```bash
+     python server.py
+     ```
+   - El navegador se abrirá automáticamente en `http://localhost:8080`.
+   - En la barra superior verás el indicador **`🟢 API En Línea (Supabase)`**.
+
+3. **Ejecutar Pruebas Automatizadas del Backend:**
+   En otra terminal dentro de `backend/`:
+   ```bash
+   npm test
+   ```
+   *Ejecutará 7 pruebas de integración completas (Auth, Cuotas, Pagos, RLS y Seguridad).*
 
 ---
 
-## 🌐 Despliegue en GitHub Pages
+### Opción B: Modo Prototipo Ligero (Solo Frontend)
 
-Este proyecto está configurado para publicarse de forma gratuita e inmediata en **GitHub Pages**:
+Si no deseas iniciar el backend de Node.js, el frontend cuenta con **tolerancia a fallos**:
+- Abre directamente [`index.html`](file:///c:/Users/ferra/OneDrive/Escritorio/Proyecto%20valle%20hermoso/index.html) en tu navegador (Chrome o Edge).
+- La barra superior indicará `🟡 API Desconectada`, activando automáticamente la persistencia local en `LocalStorage`.
 
-### Opción A: Despliegue Automático mediante GitHub Actions (Recomendado)
-El proyecto incluye el flujo de trabajo en `.github/workflows/deploy.yml`:
-1. Ve a tu repositorio en GitHub: [https://github.com/pablovirtual/Proyecto-valle-hermoso](https://github.com/pablovirtual/Proyecto-valle-hermoso)
-2. Haz clic en **Settings** (Configuración) > **Pages** (en el menú lateral izquierdo).
-3. En la sección **Build and deployment**:
-   - En **Source**, selecciona **GitHub Actions**.
-4. ¡Listo! Cada vez que hagas `git push` a la rama `main`, la web se actualizará automáticamente.
+---
 
-### Opción B: Despliegue Clásico desde la Rama `main`
-Si prefieres el método clásico de GitHub Pages:
-1. En **Settings** > **Pages** > **Build and deployment**:
-   - En **Source**, selecciona **Deploy from a branch**.
-   - En **Branch**, selecciona `main` y en la carpeta elige `/ (root)`.
-2. Haz clic en **Save**. En un par de minutos tu sitio estará en línea en:
-   👉 **https://pablovirtual.github.io/Proyecto-valle-hermoso/**
+## 👥 Credenciales de Prueba
+
+| Rol           | Correo                            | Contraseña      | Lote / Cargo   |
+|---------------|-----------------------------------|-----------------|----------------|
+| Administrador | `admin@vallehermoso.mx`           | `Admin123!`     | Mesa Directiva |
+| Residente     | `carlos.ramirez@vallehermoso.mx`  | `Residente123!` | Lote 14        |
+
+---
+
+## 📂 Estructura General de Archivos
+
+```text
+Proyecto valle hermoso/
+├── index.html                         # Interfaz gráfica principal (SPA en Tailwind)
+├── api-service.js                     # Capa de servicio cliente para llamadas REST con JWT
+├── app.js                             # Lógica de negocio y sincronización con Supabase
+├── styles.css                         # Estilos personalizados y vista de impresión de recibos
+├── server.py                          # Servidor HTTP local en Python
+├── start-prototype.bat                # Lanzador en un clic para Windows
+│
+├── backend/                           # API REST (Actividad Integradora 3)
+│   ├── config/db.js                   # Conexión al cliente de Supabase
+│   ├── controllers/                   # Controladores MVC (auth, cuotas, pagos)
+│   ├── middlewares/auth.js            # Capa de seguridad y verificación de tokens JWT
+│   ├── routes/                        # Enrutadores modulares (/api/auth, /api/cuotas, /api/pagos)
+│   ├── database.sql                   # Script DDL definitivo para Supabase (tablas, RLS y datos)
+│   ├── test-api.js                    # Suite de 7 pruebas automatizadas de integración
+│   ├── package.json                   # Dependencias de Node.js
+│   ├── README.md                      # Documentación técnica completa del backend
+│   └── .env                           # Credenciales seguras (URL y Key de Supabase)
+│
+└── .github/workflows/deploy.yml       # Despliegue continuo a GitHub Pages
+```
+
+---
+
+## 📄 Licencia y Créditos
+
+Proyecto desarrollado por **Pedro Pablo Rodríguez Gómez** para la **Universidad de Guadalajara (UDG Virtual)**, 2026.
