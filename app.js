@@ -185,6 +185,13 @@ function initApp() {
 
   updateNavigation();
   showCurrentView();
+
+  // Verificar conexión con la API REST y Supabase
+  checkBackendConnection().then(isOnline => {
+    if (isOnline && window.VHApi && window.VHApi.isAuthenticated()) {
+      syncBackendData();
+    }
+  });
 }
 
 function saveState() {
@@ -290,8 +297,36 @@ function navigateTo(role) {
   switchRole(role);
 }
 
+// ================= CONEXIÓN Y ESTADO DEL BACKEND API =================
+async function checkBackendConnection() {
+  const badge = document.getElementById('api-status-badge');
+  const dot = document.getElementById('api-status-dot');
+  const text = document.getElementById('api-status-text');
+  if (!badge) return false;
+
+  try {
+    if (window.VHApi && await window.VHApi.healthCheck()) {
+      badge.className = "flex items-center gap-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/40";
+      badge.title = "Backend REST y Supabase conectados en vivo (http://localhost:3000)";
+      if (dot) dot.className = "w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse inline-block";
+      if (text) text.textContent = "API En Línea (Supabase)";
+      return true;
+    }
+  } catch (err) {
+    console.warn('[BACKEND STATUS]:', err);
+  }
+
+  badge.className = "flex items-center gap-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/40";
+  badge.title = "Backend desconectado. Inicia el servidor con 'npm start' en la carpeta backend/";
+  if (dot) dot.className = "w-1.5 h-1.5 rounded-full bg-amber-400 inline-block";
+  if (text) text.textContent = "API Desconectada";
+  return false;
+}
+
 // Modal Login
 function openLoginModal() {
+  const feedback = document.getElementById('login-feedback');
+  if (feedback) feedback.classList.add('hidden');
   document.getElementById('modal-login').classList.remove('hidden');
 }
 
@@ -299,19 +334,173 @@ function closeLoginModal() {
   document.getElementById('modal-login').classList.add('hidden');
 }
 
-function handleLoginSubmit(e) {
+function handleLoginRoleChange(role) {
+  const labelRes = document.getElementById('label-role-resident');
+  const labelAdm = document.getElementById('label-role-admin');
+  const userInp = document.getElementById('login-username');
+  const passInp = document.getElementById('login-password');
+  const feedback = document.getElementById('login-feedback');
+  if (feedback) feedback.classList.add('hidden');
+
+  if (role === 'resident') {
+    if (labelRes) labelRes.className = "flex items-center gap-2 p-3 border rounded-xl cursor-pointer hover:bg-slate-50 transition border-brand-500 bg-brand-50/50";
+    if (labelAdm) labelAdm.className = "flex items-center gap-2 p-3 border rounded-xl cursor-pointer hover:bg-slate-50 transition border-slate-200";
+    if (userInp) userInp.value = 'carlos.ramirez@vallehermoso.mx';
+    if (passInp) passInp.value = 'Residente123!';
+  } else {
+    if (labelRes) labelRes.className = "flex items-center gap-2 p-3 border rounded-xl cursor-pointer hover:bg-slate-50 transition border-slate-200";
+    if (labelAdm) labelAdm.className = "flex items-center gap-2 p-3 border rounded-xl cursor-pointer hover:bg-slate-50 transition border-brand-500 bg-brand-50/50";
+    if (userInp) userInp.value = 'admin@vallehermoso.mx';
+    if (passInp) passInp.value = 'Admin123!';
+  }
+}
+
+async function handleLoginSubmit(e) {
   e.preventDefault();
+  const feedback = document.getElementById('login-feedback');
+  const submitBtn = document.getElementById('btn-login-submit');
+  const originalBtnText = submitBtn ? submitBtn.innerHTML : '';
+
+  const username = document.getElementById('login-username').value.trim();
+  const password = document.getElementById('login-password').value;
+
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Autenticando con JWT...`;
+  }
+
+  // 1. Intentar autenticación real contra la API REST
+  if (window.VHApi) {
+    const isOnline = await window.VHApi.healthCheck();
+    if (isOnline) {
+      const res = await window.VHApi.login(username, password);
+
+      if (res.success) {
+        const rol = res.usuario.rol;
+        const targetRole = (rol === 'Administrador') ? 'admin' : 'resident';
+
+        if (feedback) {
+          feedback.className = "text-xs p-3 rounded-xl border bg-emerald-50 text-emerald-800 border-emerald-200 block";
+          feedback.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-600 mr-1"></i> <strong>¡Sesión iniciada con éxito!</strong> Token JWT emitido para ${res.usuario.nombre}.`;
+        }
+
+        setTimeout(async () => {
+          closeLoginModal();
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnText;
+          }
+          switchRole(targetRole);
+          await syncBackendData();
+        }, 600);
+        return;
+      } else {
+        if (feedback) {
+          feedback.className = "text-xs p-3 rounded-xl border bg-rose-50 text-rose-800 border-rose-200 block";
+          feedback.innerHTML = `<i class="fa-solid fa-circle-exclamation text-rose-600 mr-1"></i> <strong>Error:</strong> ${res.error || 'Credenciales inválidas en Supabase.'}`;
+        }
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalBtnText;
+        }
+        return;
+      }
+    }
+  }
+
+  // 2. Fallback offline si el servidor no está corriendo
   const selectedRole = document.querySelector('input[name="login-role"]:checked').value;
+  if (submitBtn) {
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = originalBtnText;
+  }
   closeLoginModal();
   switchRole(selectedRole);
 }
 
-function loginAsResident() {
+async function loginAsResident() {
+  handleLoginRoleChange('resident');
+  if (window.VHApi && await window.VHApi.healthCheck()) {
+    const res = await window.VHApi.login('carlos.ramirez@vallehermoso.mx', 'Residente123!');
+    if (res.success) {
+      switchRole('resident');
+      await syncBackendData();
+      return;
+    }
+  }
   switchRole('resident');
 }
 
-function loginAsAdmin() {
+async function loginAsAdmin() {
+  handleLoginRoleChange('admin');
+  if (window.VHApi && await window.VHApi.healthCheck()) {
+    const res = await window.VHApi.login('admin@vallehermoso.mx', 'Admin123!');
+    if (res.success) {
+      switchRole('admin');
+      await syncBackendData();
+      return;
+    }
+  }
   switchRole('admin');
+}
+
+// Sincronización bidireccional de datos con Supabase
+async function syncBackendData() {
+  if (!window.VHApi) return;
+
+  try {
+    // 1. Obtener cuotas reales de Supabase para el residente 2 (Carlos Ramírez)
+    const cuotasBD = await window.VHApi.getCuotasByResidente(2);
+    if (cuotasBD && cuotasBD.length > 0) {
+      appState.residentFees = cuotasBD.map((c, index) => ({
+        id: `fee-db-${c.id_cuota}`,
+        backendId: c.id_cuota,
+        concept: index === 0 ? 'Mantenimiento Mensual Ordinario' : `Cuota de Mantenimiento #${c.id_cuota}`,
+        period: index === 0 ? 'Octubre 2026' : (index === 1 ? 'Septiembre 2026' : 'Periodo Ordinario'),
+        amount: Number(c.monto),
+        dueDate: '2026-10-10',
+        status: c.estado === 'Pagado' ? 'paid' : (c.estado === 'Pendiente' ? 'pending' : 'under_review'),
+        type: 'ordinaria',
+        description: 'Vigilancia 24/7, alumbrado público y mantenimiento (Sincronizado con Supabase)'
+      }));
+
+      saveState();
+      if (appState.currentRole === 'resident') {
+        renderResidentView();
+      }
+    }
+
+    // 2. Obtener pagos reales de Supabase
+    const pagosBD = await window.VHApi.getPagosByResidente(2);
+    if (pagosBD && pagosBD.length > 0) {
+      const mappedPayments = pagosBD.map(p => ({
+        id: `pay-db-${p.id_pago}`,
+        folio: `VH-2026-0${p.id_pago + 100}`,
+        lot: 14,
+        resident: 'Carlos Ramírez Morales',
+        concept: `Liquidación de Cuota #${p.id_cuota}`,
+        amount: Number(p.monto),
+        method: 'Tarjeta / SPEI (Registrado en BD)',
+        date: p.fecha ? p.fecha.replace('T', ' ').slice(0, 16) : '2026-10-13 12:00',
+        status: 'Aprobado',
+        ref: `TXN-DB-${p.id_pago}`,
+        seal: `SHA256:supabase_pago_${p.id_pago}`
+      }));
+
+      mappedPayments.forEach(mp => {
+        if (!appState.payments.some(p => p.id === mp.id)) {
+          appState.payments.unshift(mp);
+        }
+      });
+
+      saveState();
+      if (appState.currentRole === 'resident') {
+        renderResidentHistory();
+      }
+    }
+  } catch (err) {
+    console.warn('[SYNC ERROR] No se pudo sincronizar datos con Supabase:', err);
+  }
 }
 
 // ================= VISTA RESIDENTE =================
@@ -537,6 +726,18 @@ function processCardPayment(e) {
       user: 'carlos.ramirez@vallehermoso.mx',
       action: `Pago confirmado con tarjeta de ${selectedFeeForPayment.concept} ($${selectedFeeForPayment.amount} MXN) - Folio ${randomFolio}`
     });
+
+    // Registrar en Supabase vía API REST con JWT
+    if (window.VHApi && window.VHApi.isAuthenticated()) {
+      const cuotaId = selectedFeeForPayment.backendId || 2;
+      window.VHApi.registrarPago(cuotaId, selectedFeeForPayment.amount)
+        .then(res => {
+          if (res.success) {
+            console.log('✅ Pago asentado en Supabase (tabla pagos) y cuota liquidada:', res.data);
+          }
+        })
+        .catch(err => console.error('Error registrando pago en Supabase:', err));
+    }
 
     saveState();
 
@@ -787,6 +988,15 @@ function approvePayment(payId) {
     action: `Conciliación aprobada: Pago SPEI Lote ${payment.lot} ($${payment.amount} MXN) - Folio ${payment.folio}`
   });
 
+  // Registrar en Supabase vía API REST con JWT
+  if (window.VHApi && window.VHApi.isAuthenticated()) {
+    const fee = appState.residentFees.find(f => f.status === 'paid' && f.backendId);
+    const cuotaId = (fee && fee.backendId) ? fee.backendId : 2;
+    window.VHApi.registrarPago(cuotaId, payment.amount)
+      .then(res => console.log('✅ Conciliación registrada en Supabase:', res))
+      .catch(err => console.error('Error registrando conciliación en backend:', err));
+  }
+
   saveState();
   renderAdminView();
   alert(`Pago ${payment.folio} aprobado exitosamente. Se ha actualizado el estado de cuenta del Lote ${payment.lot}.`);
@@ -966,6 +1176,17 @@ function handleCreateFeeSubmit(e) {
     user: 'admin@vallehermoso.mx',
     action: `Emisión de cuota general: "${concept}" por $${amount} MXN aplicada a 25 lotes.`
   });
+
+  // Si está autenticado en la API REST, persistir en Supabase
+  if (window.VHApi && window.VHApi.isAuthenticated()) {
+    window.VHApi.createCuota(2, amount, 'Pendiente')
+      .then(res => {
+        if (res.success) {
+          console.log('✅ Nueva cuota persistida en Supabase:', res.data);
+        }
+      })
+      .catch(err => console.error('Error creando cuota en Supabase:', err));
+  }
 
   saveState();
   closeNewFeeModal();

@@ -184,6 +184,44 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ---
 
+### Pagos (`/api/pagos`)
+
+| Método   | Ruta                          | Acceso          | Descripción                                                      |
+|----------|-------------------------------|:---------------:|------------------------------------------------------------------|
+| `GET`    | `/api/pagos`                  | 🔒 Requiere JWT | Lista todos los pagos registrados (filtro opcional `?id_cuota=X`)|
+| `GET`    | `/api/pagos/residente/:id`    | 🔒 Requiere JWT | Historial completo de pagos de un residente específico          |
+| `GET`    | `/api/pagos/:id`              | 🔒 Requiere JWT | Detalle de un pago por su ID                                    |
+| `POST`   | `/api/pagos`                  | 🔒 Requiere JWT | Registra un pago y actualiza la cuota a `Pagado` automáticamente |
+| `DELETE` | `/api/pagos/:id`              | 🔒 Requiere JWT | Elimina el pago y revierte la cuota a `Pendiente`                |
+
+**Body para registrar un pago (`POST /api/pagos`):**
+```json
+{
+  "id_cuota": 2,
+  "monto": 1200.00
+}
+```
+
+**Respuesta exitosa (HTTP 201 Created):**
+```json
+{
+  "success": true,
+  "message": "Pago registrado exitosamente. Estado de cuota actualizado a Pagado.",
+  "data": {
+    "id_pago": 3,
+    "id_cuota": 2,
+    "monto": 1200,
+    "fecha": "2026-10-14T04:27:00.000Z"
+  },
+  "registradoPor": {
+    "usuario_id": 1,
+    "rol": "Administrador"
+  }
+}
+```
+
+---
+
 ## 🚀 Guía de Instalación y Ejecución
 
 ### Requisitos previos
@@ -265,7 +303,7 @@ Abre tu navegador y visita:
 
 ## 🧪 Suite de Pruebas Automatizadas
 
-Este proyecto incluye el script [`test-api.js`](./test-api.js) que ejecuta **5 pruebas de integración** reales contra el servidor y Supabase:
+Este proyecto incluye el script [`test-api.js`](./test-api.js) que ejecuta **7 pruebas de integración** reales contra el servidor y Supabase:
 
 ```bash
 # Con el servidor corriendo en otra terminal:
@@ -280,13 +318,15 @@ npm test
 | 2 | Login y generación de JWT           | Credenciales válidas → token firmado generado       |
 | 3 | Consulta de cuotas en Supabase      | Lectura real de datos desde PostgreSQL              |
 | 4 | Ruta protegida SIN token            | Debe retornar HTTP 401 (capa de seguridad activa)   |
-| 5 | Ruta protegida CON token JWT válido | Creación exitosa HTTP 201 + limpieza automática     |
+| 5 | Ruta protegida CON token JWT válido | Creación exitosa HTTP 201 en Supabase               |
+| 6 | Registrar Pago (`POST /api/pagos`)  | Asienta pago en Supabase y actualiza cuota a Pagado |
+| 7 | Historial de Pagos con JWT          | Listado general e historial por residente en vivo   |
 
 **Resultado esperado:**
 ```
-🎉 ¡TODAS LAS PRUEBAS PASARON AL 100%!
-La infraestructura de servicios, base de datos Supabase
-y capa de seguridad JWT están funcionando perfectamente.
+🎉 ¡TODAS LAS PRUEBAS (7/7) PASARON AL 100%!
+La infraestructura de servicios (Auth, Cuotas y Pagos),
+la base de datos Supabase y la seguridad JWT están operando.
 ```
 
 ---

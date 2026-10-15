@@ -90,8 +90,10 @@ El prototipo utiliza `LocalStorage` para mantener todos los cambios entre recarg
 
 ## 📂 Archivos del Proyecto
 - [index.html](file:///c:/Users/ferra/OneDrive/Escritorio/Proyecto%20valle%20hermoso/index.html) — Interfaz principal responsiva (SPA).
-- [app.js](file:///c:/Users/ferra/OneDrive/Escritorio/Proyecto%20valle%20hermoso/app.js) — Lógica de negocio, base de datos simulada y pasarela transaccional.
+- [api-service.js](file:///c:/Users/ferra/OneDrive/Escritorio/Proyecto%20valle%20hermoso/api-service.js) — Capa de servicio e integración con la API REST (Node.js/Express) y gestión de tokens JWT.
+- [app.js](file:///c:/Users/ferra/OneDrive/Escritorio/Proyecto%20valle%20hermoso/app.js) — Lógica de negocio, conexión bidireccional con Supabase y pasarela transaccional.
 - [styles.css](file:///c:/Users/ferra/OneDrive/Escritorio/Proyecto%20valle%20hermoso/styles.css) — Estilos personalizados y vista de impresión para recibos.
+- [backend/](file:///c:/Users/ferra/OneDrive/Escritorio/Proyecto%20valle%20hermoso/backend) — Servidor API REST con Express, Supabase (PostgreSQL), JWT y CRUD de Residentes, Cuotas y Pagos.
 - [server.py](file:///c:/Users/ferra/OneDrive/Escritorio/Proyecto%20valle%20hermoso/server.py) — Servidor HTTP local con apertura automática del navegador.
 - [start-prototype.bat](file:///c:/Users/ferra/OneDrive/Escritorio/Proyecto%20valle%20hermoso/start-prototype.bat) — Lanzador ejecutable para Windows.
 - [404.html](file:///c:/Users/ferra/OneDrive/Escritorio/Proyecto%20valle%20hermoso/404.html) — Página de redirección para rutas no encontradas en GitHub Pages.

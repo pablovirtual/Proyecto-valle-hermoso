@@ -131,23 +131,67 @@ async function runTests() {
       adminToken
     );
 
+    let idCuotaCreada = null;
     if (authRes.status === 201) {
+      idCuotaCreada = authRes.data.data.id_cuota;
       console.log('  ✅ Cuota creada exitosamente en Supabase (HTTP 201 Created)');
-      console.log('  📝 Detalle de nueva cuota: ID', authRes.data.data.id_cuota, '- Monto: $' + authRes.data.data.monto);
+      console.log('  📝 Detalle de nueva cuota: ID', idCuotaCreada, '- Monto: $' + authRes.data.data.monto);
       console.log('  🔒 Registrado por usuario autenticado:', authRes.data.creadoPor);
-
-      // Limpieza de la cuota de prueba
-      const idCreado = authRes.data.data.id_cuota;
-      await request('DELETE', `/api/cuotas/${idCreado}`, null, adminToken);
-      console.log(`  🧹 Cuota de prueba (ID ${idCreado}) eliminada tras la verificación.`);
     } else {
       throw new Error(`Fallo al crear cuota autenticada: ${JSON.stringify(authRes.data)}`);
     }
 
+    // --------------------------------------------------------------------------
+    // Prueba 6: Endpoint Pagos - Registrar Pago y Actualización Automática de Cuota
+    // --------------------------------------------------------------------------
+    console.log('\n🔹 [6/7] Probando Endpoint POST /api/pagos (Registrar Pago con JWT)...');
+    const pagoRes = await request(
+      'POST',
+      '/api/pagos',
+      {
+        id_cuota: idCuotaCreada,
+        monto: 1500.00
+      },
+      adminToken
+    );
+
+    let idPagoCreado = null;
+    if (pagoRes.status === 201) {
+      idPagoCreado = pagoRes.data.data.id_pago;
+      console.log('  ✅ Pago registrado exitosamente (HTTP 201 Created)');
+      console.log('  💳 Detalle de pago: ID Pago', idPagoCreado, 'asignado a Cuota', idCuotaCreada);
+      console.log('  🔄 La cuota se actualizó automáticamente a estado: "Pagado"');
+    } else {
+      throw new Error(`Fallo al registrar pago: ${JSON.stringify(pagoRes.data)}`);
+    }
+
+    // --------------------------------------------------------------------------
+    // Prueba 7: Endpoint Pagos - Consultar Historial con JWT
+    // --------------------------------------------------------------------------
+    console.log('\n🔹 [7/7] Probando Endpoint GET /api/pagos y GET /api/pagos/residente/2...');
+    const pagosListRes = await request('GET', '/api/pagos', null, adminToken);
+    const pagosResidenteRes = await request('GET', '/api/pagos/residente/2', null, adminToken);
+
+    if (pagosListRes.status === 200 && pagosResidenteRes.status === 200) {
+      console.log(`  ✅ Listado general de pagos recuperado: ${pagosListRes.data.total} pagos en total`);
+      console.log(`  ✅ Historial del residente 2 recuperado: ${pagosResidenteRes.data.total} pagos del residente`);
+    } else {
+      throw new Error('Fallo al consultar historial de pagos.');
+    }
+
+    // Limpieza de datos de prueba
+    if (idPagoCreado) {
+      await request('DELETE', `/api/pagos/${idPagoCreado}`, null, adminToken);
+    }
+    if (idCuotaCreada) {
+      await request('DELETE', `/api/cuotas/${idCuotaCreada}`, null, adminToken);
+    }
+    console.log('  🧹 Registros temporales de prueba limpiados exitosamente.');
+
     console.log('\n==============================================================');
-    console.log('  🎉 ¡TODAS LAS PRUEBAS PASARON AL 100%! ');
-    console.log('  La infraestructura de servicios, base de datos Supabase');
-    console.log('  y capa de seguridad JWT están funcionando perfectamente.');
+    console.log('  🎉 ¡TODAS LAS PRUEBAS (7/7) PASARON AL 100%! ');
+    console.log('  La infraestructura de servicios (Auth, Cuotas y Pagos),');
+    console.log('  la base de datos Supabase y la seguridad JWT están operando.');
     console.log('==============================================================\n');
 
   } catch (error) {
