@@ -140,6 +140,32 @@ async function apiLogin(correo, password) {
 }
 
 /**
+ * Registra un nuevo residente en el backend (Supabase) y guarda automáticamente la sesión con el token JWT emitido.
+ *
+ * @param {string} nombre - Nombre completo del residente.
+ * @param {string} correo - Correo electrónico único.
+ * @param {string} password - Contraseña en texto plano.
+ * @param {string} rol - Rol ('Residente' por defecto).
+ * @returns {Promise<{success: boolean, usuario?: object, message?: string, error?: string}>}
+ */
+async function apiRegister(nombre, correo, password, rol = 'Residente') {
+  const result = await apiRequest('/auth/register', 'POST', { nombre, correo, password, rol });
+
+  if (result.success) {
+    if (result.data.token && result.data.usuario) {
+      saveSession(result.data.token, result.data.usuario);
+    }
+    return {
+      success: true,
+      usuario: result.data.usuario || result.data.data,
+      message: result.data.message
+    };
+  }
+
+  return { success: false, error: result.error };
+}
+
+/**
  * Cierra la sesión del usuario actual eliminando el token.
  */
 function apiLogout() {
@@ -258,6 +284,7 @@ window.VHApi = {
   clearSession,
   // Auth
   login: apiLogin,
+  register: apiRegister,
   logout: apiLogout,
   // Cuotas
   getCuotasByResidente: apiGetCuotasByResidente,

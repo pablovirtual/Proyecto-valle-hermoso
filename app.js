@@ -229,11 +229,20 @@ function updateNavigation() {
       <a href="#reglamento" onclick="navigateTo('landing')" class="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900">Reglamento</a>
     `;
     userActions.innerHTML = `
-      <button onclick="openLoginModal()" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center gap-1.5">
+      <button onclick="openAuthModal('register')" class="px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs">
+        <i class="fa-solid fa-user-plus text-emerald-600"></i> Registrarse
+      </button>
+      <button onclick="openAuthModal('login')" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center gap-1.5">
         <i class="fa-solid fa-right-to-bracket"></i> Iniciar Sesión
       </button>
     `;
   } else if (appState.currentRole === 'resident') {
+    const currentUser = window.VHApi ? window.VHApi.getCurrentUser() : null;
+    const activeResident = appState.residents.find(r => r.lot === appState.activeResidentLot);
+    const residentName = currentUser ? currentUser.nombre : (activeResident ? activeResident.name : 'Carlos Ramírez');
+    const residentLot = appState.activeResidentLot || 14;
+    const initials = residentName.split(' ').map(n => n[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() || 'CR';
+
     navLinks.innerHTML = `
       <button onclick="switchResidentTab('cuotas')" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100">Mis Cuotas</button>
       <button onclick="switchResidentTab('historial')" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100">Historial</button>
@@ -242,13 +251,13 @@ function updateNavigation() {
     userActions.innerHTML = `
       <div class="flex items-center gap-2 pl-2 border-l border-slate-200">
         <div class="w-8 h-8 rounded-full bg-emerald-100 text-brand-700 flex items-center justify-center font-bold text-xs">
-          CR
+          ${initials}
         </div>
         <div class="hidden sm:block text-left">
-          <div class="text-xs font-bold text-slate-800 leading-tight">Carlos Ramírez</div>
-          <div class="text-[10px] text-slate-500">Lote 14 • Residente</div>
+          <div class="text-xs font-bold text-slate-800 leading-tight">${residentName}</div>
+          <div class="text-[10px] text-slate-500">Lote ${residentLot} • Residente</div>
         </div>
-        <button onclick="switchRole('landing')" title="Cerrar sesión" class="text-slate-400 hover:text-rose-500 text-xs ml-2">
+        <button onclick="handleUserLogout()" title="Cerrar sesión" class="text-slate-400 hover:text-rose-500 text-xs ml-2">
           <i class="fa-solid fa-arrow-right-from-bracket"></i>
         </button>
       </div>
@@ -323,15 +332,59 @@ async function checkBackendConnection() {
   return false;
 }
 
-// Modal Login
+// ================= GESTIÓN DE MODAL DE AUTENTICACIÓN (LOGIN / REGISTRO) =================
+
+function switchAuthTab(tab) {
+  const panelLogin = document.getElementById('auth-panel-login');
+  const panelRegister = document.getElementById('auth-panel-register');
+  const btnLogin = document.getElementById('tab-btn-login');
+  const btnRegister = document.getElementById('tab-btn-register');
+  const loginFeedback = document.getElementById('login-feedback');
+  const regFeedback = document.getElementById('register-feedback');
+
+  if (loginFeedback) {
+    loginFeedback.className = 'hidden';
+    loginFeedback.innerHTML = '';
+  }
+  if (regFeedback) {
+    regFeedback.className = 'hidden';
+    regFeedback.innerHTML = '';
+  }
+
+  if (tab === 'login') {
+    if (panelLogin) panelLogin.classList.remove('hidden');
+    if (panelRegister) panelRegister.classList.add('hidden');
+    if (btnLogin) {
+      btnLogin.className = "flex-1 py-2 px-3 text-xs font-bold rounded-xl bg-white text-slate-900 shadow-xs transition flex items-center justify-center gap-1.5";
+    }
+    if (btnRegister) {
+      btnRegister.className = "flex-1 py-2 px-3 text-xs font-bold rounded-xl text-slate-500 hover:text-slate-800 transition flex items-center justify-center gap-1.5";
+    }
+  } else {
+    if (panelLogin) panelLogin.classList.add('hidden');
+    if (panelRegister) panelRegister.classList.remove('hidden');
+    if (btnLogin) {
+      btnLogin.className = "flex-1 py-2 px-3 text-xs font-bold rounded-xl text-slate-500 hover:text-slate-800 transition flex items-center justify-center gap-1.5";
+    }
+    if (btnRegister) {
+      btnRegister.className = "flex-1 py-2 px-3 text-xs font-bold rounded-xl bg-white text-emerald-800 shadow-xs transition flex items-center justify-center gap-1.5";
+    }
+  }
+}
+
+function openAuthModal(tab = 'login') {
+  switchAuthTab(tab);
+  const modal = document.getElementById('modal-login');
+  if (modal) modal.classList.remove('hidden');
+}
+
 function openLoginModal() {
-  const feedback = document.getElementById('login-feedback');
-  if (feedback) feedback.classList.add('hidden');
-  document.getElementById('modal-login').classList.remove('hidden');
+  openAuthModal('login');
 }
 
 function closeLoginModal() {
-  document.getElementById('modal-login').classList.add('hidden');
+  const modal = document.getElementById('modal-login');
+  if (modal) modal.classList.add('hidden');
 }
 
 function handleLoginRoleChange(role) {
@@ -416,6 +469,120 @@ async function handleLoginSubmit(e) {
   }
   closeLoginModal();
   switchRole(selectedRole);
+}
+
+/**
+ * Manejador del Formulario de Registro de Nuevos Residentes.
+ * Valida datos, envía POST /api/auth/register a Supabase y realiza auto-login con JWT.
+ */
+async function handleRegisterSubmit(e) {
+  e.preventDefault();
+  const feedback = document.getElementById('register-feedback');
+  const submitBtn = document.getElementById('btn-register-submit');
+  const originalBtnText = submitBtn ? submitBtn.innerHTML : '';
+
+  const nombre = document.getElementById('reg-nombre').value.trim();
+  const correo = document.getElementById('reg-correo').value.trim();
+  const lote = parseInt(document.getElementById('reg-lote').value, 10);
+  const password = document.getElementById('reg-password').value;
+  const passwordConfirm = document.getElementById('reg-password-confirm').value;
+
+  // 1. Validaciones de formulario
+  if (!nombre || !correo || !password) {
+    if (feedback) {
+      feedback.className = "text-xs p-3 rounded-xl border bg-rose-50 text-rose-800 border-rose-200 block";
+      feedback.innerHTML = `<i class="fa-solid fa-circle-exclamation text-rose-600 mr-1"></i> Por favor completa todos los campos requeridos.`;
+    }
+    return;
+  }
+
+  if (password.length < 6) {
+    if (feedback) {
+      feedback.className = "text-xs p-3 rounded-xl border bg-rose-50 text-rose-800 border-rose-200 block";
+      feedback.innerHTML = `<i class="fa-solid fa-circle-exclamation text-rose-600 mr-1"></i> La contraseña debe tener al menos 6 caracteres.`;
+    }
+    return;
+  }
+
+  if (password !== passwordConfirm) {
+    if (feedback) {
+      feedback.className = "text-xs p-3 rounded-xl border bg-rose-50 text-rose-800 border-rose-200 block";
+      feedback.innerHTML = `<i class="fa-solid fa-circle-exclamation text-rose-600 mr-1"></i> Las contraseñas no coinciden. Por favor verifícalas.`;
+    }
+    return;
+  }
+
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Registrando en Supabase...`;
+  }
+
+  // 2. Registro real en la API REST y Supabase
+  if (window.VHApi) {
+    const isOnline = await window.VHApi.healthCheck();
+    if (isOnline) {
+      const res = await window.VHApi.register(nombre, correo, password, 'Residente');
+
+      if (res.success) {
+        if (feedback) {
+          feedback.className = "text-xs p-3 rounded-xl border bg-emerald-50 text-emerald-800 border-emerald-200 block";
+          feedback.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-600 mr-1"></i> <strong>¡Registro exitoso!</strong> Bienvenido(a), ${nombre}. Iniciando sesión con JWT...`;
+        }
+
+        // Actualizar el estado local para el nuevo residente
+        appState.activeResidentLot = lote || 15;
+        let residentObj = appState.residents.find(r => r.lot === appState.activeResidentLot);
+        if (residentObj) {
+          residentObj.name = nombre;
+          residentObj.email = correo;
+        }
+
+        setTimeout(async () => {
+          closeLoginModal();
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnText;
+          }
+          switchRole('resident');
+          await syncBackendData();
+        }, 700);
+        return;
+      } else {
+        if (feedback) {
+          feedback.className = "text-xs p-3 rounded-xl border bg-rose-50 text-rose-800 border-rose-200 block";
+          feedback.innerHTML = `<i class="fa-solid fa-circle-exclamation text-rose-600 mr-1"></i> <strong>Error:</strong> ${res.error || 'No se pudo completar el registro.'}`;
+        }
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalBtnText;
+        }
+        return;
+      }
+    }
+  }
+
+  // 3. Fallback offline en caso de que el backend esté desconectado
+  appState.activeResidentLot = lote || 15;
+  let residentObj = appState.residents.find(r => r.lot === appState.activeResidentLot);
+  if (residentObj) {
+    residentObj.name = nombre;
+    residentObj.email = correo;
+  }
+  saveState();
+
+  if (submitBtn) {
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = originalBtnText;
+  }
+  closeLoginModal();
+  switchRole('resident');
+}
+
+function handleUserLogout() {
+  if (window.VHApi) {
+    window.VHApi.logout();
+  }
+  switchRole('landing');
 }
 
 async function loginAsResident() {
@@ -523,6 +690,12 @@ function switchResidentTab(tabId) {
 }
 
 function renderResidentView() {
+  const currentUser = window.VHApi ? window.VHApi.getCurrentUser() : null;
+  const activeResident = appState.residents.find(r => r.lot === appState.activeResidentLot);
+  const residentName = currentUser ? currentUser.nombre : (activeResident ? activeResident.name : 'Carlos Ramírez Morales');
+  const nameEl = document.getElementById('resident-name-display');
+  if (nameEl) nameEl.textContent = residentName;
+
   const container = document.getElementById('resident-fees-container');
   container.innerHTML = '';
 

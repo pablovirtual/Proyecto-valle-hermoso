@@ -2,7 +2,7 @@
 
 [![GitHub Pages](https://img.shields.io/badge/Demo_en_Vivo-GitHub_Pages-059669?style=for-the-badge&logo=github)](https://pablovirtual.github.io/Proyecto-valle-hermoso/)
 [![Backend Status](https://img.shields.io/badge/API_REST-Node.js_+_Supabase_+_JWT-0284c7?style=for-the-badge&logo=node.js)](backend/)
-[![Pruebas](https://img.shields.io/badge/Pruebas_Integrales-7%2F7_Pasadas_(100%25)-10b981?style=for-the-badge)](backend/test-api.js)
+[![Pruebas](https://img.shields.io/badge/Pruebas_Integrales-9%2F9_Pasadas_(100%25)-10b981?style=for-the-badge)](backend/test-api.js)
 
 **Plataforma Integral de Servicios Web y Control Financiero**  
 *Universidad de Guadalajara — UDG Virtual*  
@@ -59,10 +59,15 @@ La solución es una **Infraestructura de Servicios Web Integral** compuesta por:
 
 ## 🛠️ Módulos y Funcionalidades del Sistema
 
-### 1. 🌐 Portal Público / Landing Page
-- Información general del fraccionamiento y monto de cuotas del periodo ($1,200 MXN).
-- Avisos comunitarios, proyectos de mejora común y normativas fiscales.
-- Acceso rápido a inicio de sesión con roles diferenciados (**Residente** y **Administrador**).
+### 1. 🌐 Portal Público / Landing Page y Registro de Residentes
+- **Información del Fraccionamiento:** Cuota mensual vigente ($1,200 MXN), proyectos comunes y avisos fiscales.
+- **Registro de Nuevos Residentes (`POST /api/auth/register`):**
+  - Formulario intuitivo con pestañas dinámicas en el modal de autenticación (*Iniciar Sesión* y *Crear Cuenta*).
+  - Captura y validación de nombre, correo, lote asignado y contraseña (mínimo 6 caracteres).
+  - Persistencia segura en la tabla `residentes` de Supabase con contraseñas encriptadas mediante `bcrypt` (factor de coste 10).
+  - Control de unicidad con respuesta `HTTP 409 Conflict` si el correo ya existe.
+  - **Auto-login instantáneo:** emisión directa de token JWT tras el registro para acceso sin fricciones al portal.
+- **Acceso Directo por Roles:** Botones diferenciados para **Residente** y **Mesa Directiva**.
 
 ### 2. 👤 Portal del Residente (Lote 14 - Carlos Ramírez)
 - **Estado de Cuenta en Vivo:** Sincronizado en tiempo real con Supabase (`GET /api/cuotas?id_residente=2`).

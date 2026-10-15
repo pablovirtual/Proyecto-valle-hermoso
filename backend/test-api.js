@@ -178,6 +178,49 @@ async function runTests() {
     } else {
       throw new Error('Fallo al consultar historial de pagos.');
     }
+    // --------------------------------------------------------------------------
+    // Prueba 8: Registro de Nuevo Residente (POST /api/auth/register)
+    // --------------------------------------------------------------------------
+    console.log('\n🔹 [8/9] Probando Registro de Nuevo Residente (POST /api/auth/register)...');
+    const testEmail = `residente.test.${Date.now()}@vallehermoso.mx`;
+    const regRes = await request('POST', '/api/auth/register', {
+      nombre: 'Mariana Soto Morales',
+      correo: testEmail,
+      password: 'PasswordSegura123!',
+      rol: 'Residente'
+    });
+
+    let idResidenteCreado = null;
+    let nuevoResidenteToken = null;
+
+    if (regRes.status === 201 && regRes.data.token) {
+      idResidenteCreado = regRes.data.usuario.id_residente;
+      nuevoResidenteToken = regRes.data.token;
+      console.log('  ✅ Residente registrado exitosamente en Supabase (HTTP 201 Created)');
+      console.log('  👤 ID Residente:', idResidenteCreado, '| Nombre:', regRes.data.usuario.nombre);
+      console.log('  🔑 Token JWT de auto-login emitido:', nuevoResidenteToken.substring(0, 35) + '...');
+      console.log('  🛡️ Rol asignado:', regRes.data.usuario.rol);
+    } else {
+      throw new Error(`Fallo en registro de residente: ${JSON.stringify(regRes.data)}`);
+    }
+
+    // --------------------------------------------------------------------------
+    // Prueba 9: Prevención de Correo Duplicado (HTTP 409 Conflict)
+    // --------------------------------------------------------------------------
+    console.log('\n🔹 [9/9] Probando rechazo de correo duplicado...');
+    const dupRes = await request('POST', '/api/auth/register', {
+      nombre: 'Mariana Soto Intento Duplicado',
+      correo: testEmail,
+      password: 'OtraPassword123!',
+      rol: 'Residente'
+    });
+
+    if (dupRes.status === 409) {
+      console.log('  🛡️ RECHAZO CORRECTO: La API evitó duplicación de correo (HTTP 409 Conflict)');
+      console.log('  🛑 Mensaje:', dupRes.data.error);
+    } else {
+      throw new Error(`FALLO: Se esperaba HTTP 409 pero se obtuvo ${dupRes.status}`);
+    }
 
     // Limpieza de datos de prueba
     if (idPagoCreado) {
@@ -186,12 +229,19 @@ async function runTests() {
     if (idCuotaCreada) {
       await request('DELETE', `/api/cuotas/${idCuotaCreada}`, null, adminToken);
     }
-    console.log('  🧹 Registros temporales de prueba limpiados exitosamente.');
+    if (idResidenteCreado) {
+      const supabase = require('./config/db');
+      await supabase.from('residentes').delete().eq('id_residente', idResidenteCreado);
+    }
+    console.log('  🧹 Registros temporales de prueba limpiados exitosamente de Supabase.');
 
     console.log('\n==============================================================');
-    console.log('  🎉 ¡TODAS LAS PRUEBAS (7/7) PASARON AL 100%! ');
-    console.log('  La infraestructura de servicios (Auth, Cuotas y Pagos),');
-    console.log('  la base de datos Supabase y la seguridad JWT están operando.');
+    console.log('  🎉 ¡TODAS LAS PRUEBAS (9/9) PASARON AL 100%! ');
+    console.log('  - Autenticación JWT y Roles (Admin / Residente)');
+    console.log('  - Registro de Nuevos Residentes con Encriptación bcrypt');
+    console.log('  - Prevención de Correos Duplicados (HTTP 409)');
+    console.log('  - CRUD de Cuotas y Protección de Rutas');
+    console.log('  - CRUD de Pagos y Actualización Automática de Estados');
     console.log('==============================================================\n');
 
   } catch (error) {

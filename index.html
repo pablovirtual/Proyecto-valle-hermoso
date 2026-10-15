@@ -164,6 +164,9 @@
             <button onclick="loginAsResident()" class="px-6 py-3.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-sm shadow-lg shadow-brand-600/30 transition transform hover:-translate-y-0.5 flex items-center gap-2">
               <i class="fa-solid fa-user"></i> Ingresar como Residente
             </button>
+            <button onclick="openAuthModal('register')" class="px-6 py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-bold text-sm shadow-lg shadow-emerald-500/20 transition transform hover:-translate-y-0.5 flex items-center gap-2">
+              <i class="fa-solid fa-user-plus"></i> Crear Cuenta de Residente
+            </button>
             <button onclick="loginAsAdmin()" class="px-6 py-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold text-sm transition flex items-center gap-2">
               <i class="fa-solid fa-lock"></i> Acceso Mesa Directiva
             </button>
@@ -271,64 +274,161 @@
     </section>
 
     <!-- ------------------------------------------------------------------------ -->
-    <!-- VISTA 2: MODAL DE INICIO DE SESIÓN                                       -->
+    <!-- VISTA 2: MODAL DE AUTENTICACIÓN (INICIO DE SESIÓN / REGISTRO)            -->
     <!-- ------------------------------------------------------------------------ -->
     <div id="modal-login" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
-      <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 animate-scale-up">
+      <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 animate-scale-up max-h-[92vh] overflow-y-auto">
+        <!-- Selector de Pestañas (Tabs) y Botón Cerrar -->
         <div class="flex justify-between items-center mb-5">
-          <div class="flex items-center gap-2">
-            <div class="w-8 h-8 rounded-lg bg-brand-600 text-white flex items-center justify-center text-sm">
-              <i class="fa-solid fa-key"></i>
-            </div>
-            <h3 class="font-bold text-lg text-slate-900">Iniciar Sesión</h3>
+          <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-2xl w-full mr-3">
+            <button type="button" id="tab-btn-login" onclick="switchAuthTab('login')" class="flex-1 py-2 px-3 text-xs font-bold rounded-xl bg-white text-slate-900 shadow-xs transition flex items-center justify-center gap-1.5">
+              <i class="fa-solid fa-key text-brand-600"></i> Iniciar Sesión
+            </button>
+            <button type="button" id="tab-btn-register" onclick="switchAuthTab('register')" class="flex-1 py-2 px-3 text-xs font-bold rounded-xl text-slate-500 hover:text-slate-800 transition flex items-center justify-center gap-1.5">
+              <i class="fa-solid fa-user-plus text-emerald-600"></i> Crear Cuenta
+            </button>
           </div>
-          <button onclick="closeLoginModal()" class="text-slate-400 hover:text-slate-600 text-lg">
+          <button onclick="closeLoginModal()" class="text-slate-400 hover:text-slate-600 text-lg p-1 shrink-0">
             <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
 
-        <form id="form-login" onsubmit="handleLoginSubmit(event)" class="space-y-4">
-          <!-- Alerta de estado / error de login -->
-          <div id="login-feedback" class="hidden text-xs p-3 rounded-xl border"></div>
+        <!-- PESTAÑA 1: INICIAR SESIÓN -->
+        <div id="auth-panel-login">
+          <form id="form-login" onsubmit="handleLoginSubmit(event)" class="space-y-4">
+            <!-- Alerta de estado / error de login -->
+            <div id="login-feedback" class="hidden text-xs p-3 rounded-xl border"></div>
 
-          <div>
-            <label class="block text-xs font-semibold text-slate-700 mb-1">Tipo de Cuenta / Rol</label>
-            <div class="grid grid-cols-2 gap-2">
-              <label class="flex items-center gap-2 p-3 border rounded-xl cursor-pointer hover:bg-slate-50 transition border-brand-500 bg-brand-50/50" id="label-role-resident">
-                <input type="radio" name="login-role" value="resident" checked onchange="handleLoginRoleChange(this.value)" class="text-brand-600">
-                <div class="text-xs font-semibold text-slate-800">Residente</div>
-              </label>
-              <label class="flex items-center gap-2 p-3 border rounded-xl cursor-pointer hover:bg-slate-50 transition border-slate-200" id="label-role-admin">
-                <input type="radio" name="login-role" value="admin" onchange="handleLoginRoleChange(this.value)" class="text-brand-600">
-                <div class="text-xs font-semibold text-slate-800">Administrador</div>
-              </label>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Tipo de Cuenta / Rol</label>
+              <div class="grid grid-cols-2 gap-2">
+                <label class="flex items-center gap-2 p-3 border rounded-xl cursor-pointer hover:bg-slate-50 transition border-brand-500 bg-brand-50/50" id="label-role-resident">
+                  <input type="radio" name="login-role" value="resident" checked onchange="handleLoginRoleChange(this.value)" class="text-brand-600">
+                  <div class="text-xs font-semibold text-slate-800">Residente</div>
+                </label>
+                <label class="flex items-center gap-2 p-3 border rounded-xl cursor-pointer hover:bg-slate-50 transition border-slate-200" id="label-role-admin">
+                  <input type="radio" name="login-role" value="admin" onchange="handleLoginRoleChange(this.value)" class="text-brand-600">
+                  <div class="text-xs font-semibold text-slate-800">Administrador</div>
+                </label>
+              </div>
             </div>
-          </div>
 
-          <div>
-            <label class="block text-xs font-semibold text-slate-700 mb-1">Usuario / Correo Electrónico</label>
-            <input type="text" id="login-username" required class="w-full text-sm px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500" value="carlos.ramirez@vallehermoso.mx">
-          </div>
-
-          <div>
-            <label class="block text-xs font-semibold text-slate-700 mb-1">Contraseña</label>
-            <input type="password" id="login-password" required class="w-full text-sm px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500" value="Residente123!">
-          </div>
-
-          <div class="p-3 bg-slate-50 rounded-xl text-[11px] text-slate-500 border border-slate-200 space-y-1">
-            <div class="font-bold text-slate-700 flex items-center gap-1">
-              <i class="fa-solid fa-server text-emerald-600"></i> Credenciales de la Base de Datos (Supabase):
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Usuario / Correo Electrónico</label>
+              <input type="text" id="login-username" required class="w-full text-sm px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500" value="carlos.ramirez@vallehermoso.mx">
             </div>
-            <div>• Residente: <code>carlos.ramirez@vallehermoso.mx</code> (Lote 14)</div>
-            <div>• Mesa Directiva: <code>admin@vallehermoso.mx</code></div>
-            <div class="text-[10px] text-emerald-700 pt-0.5">🔒 La autenticación emite un token JWT real firmado por el backend.</div>
-          </div>
 
-          <button type="submit" id="btn-login-submit" class="w-full py-3 bg-brand-600 hover:bg-brand-500 text-white rounded-xl font-bold text-sm shadow-md shadow-brand-600/30 transition flex items-center justify-center gap-2">
-            <span>Entrar al Portal con JWT</span>
-            <i class="fa-solid fa-arrow-right text-xs"></i>
-          </button>
-        </form>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Contraseña</label>
+              <input type="password" id="login-password" required class="w-full text-sm px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500" value="Residente123!">
+            </div>
+
+            <div class="p-3 bg-slate-50 rounded-xl text-[11px] text-slate-500 border border-slate-200 space-y-1">
+              <div class="font-bold text-slate-700 flex items-center gap-1">
+                <i class="fa-solid fa-server text-emerald-600"></i> Credenciales de la Base de Datos (Supabase):
+              </div>
+              <div>• Residente: <code>carlos.ramirez@vallehermoso.mx</code> (Lote 14)</div>
+              <div>• Mesa Directiva: <code>admin@vallehermoso.mx</code></div>
+              <div class="text-[10px] text-emerald-700 pt-0.5">🔒 La autenticación emite un token JWT real firmado por el backend.</div>
+            </div>
+
+            <button type="submit" id="btn-login-submit" class="w-full py-3 bg-brand-600 hover:bg-brand-500 text-white rounded-xl font-bold text-sm shadow-md shadow-brand-600/30 transition flex items-center justify-center gap-2">
+              <span>Entrar al Portal con JWT</span>
+              <i class="fa-solid fa-arrow-right text-xs"></i>
+            </button>
+
+            <div class="text-center pt-2 text-xs text-slate-500">
+              ¿Eres nuevo residente? 
+              <button type="button" onclick="switchAuthTab('register')" class="text-brand-600 hover:underline font-bold">Crear una cuenta aquí</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- PESTAÑA 2: CREAR CUENTA DE RESIDENTE -->
+        <div id="auth-panel-register" class="hidden">
+          <form id="form-register" onsubmit="handleRegisterSubmit(event)" class="space-y-3.5">
+            <!-- Alerta de estado / error de registro -->
+            <div id="register-feedback" class="hidden text-xs p-3 rounded-xl border"></div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Nombre Completo del Residente</label>
+              <div class="relative">
+                <input type="text" id="reg-nombre" required placeholder="Ej. Mariana Soto Morales" class="w-full text-sm pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+                <span class="absolute left-3 top-3 text-slate-400 text-xs"><i class="fa-solid fa-user"></i></span>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Correo Electrónico</label>
+              <div class="relative">
+                <input type="email" id="reg-correo" required placeholder="ejemplo@vallehermoso.mx" class="w-full text-sm pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+                <span class="absolute left-3 top-3 text-slate-400 text-xs"><i class="fa-solid fa-envelope"></i></span>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Lote / Vivienda Asignada</label>
+              <div class="relative">
+                <select id="reg-lote" class="w-full text-sm pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white">
+                  <option value="1">Lote 01 • Calle Jacarandas</option>
+                  <option value="2">Lote 02 • Calle Jacarandas</option>
+                  <option value="3">Lote 03 • Calle Jacarandas</option>
+                  <option value="4">Lote 04 • Calle Los Pinos</option>
+                  <option value="5">Lote 05 • Calle Los Pinos</option>
+                  <option value="6">Lote 06 • Calle Los Pinos</option>
+                  <option value="7">Lote 07 • Calle Los Cedros</option>
+                  <option value="8">Lote 08 • Calle Los Cedros</option>
+                  <option value="9">Lote 09 • Calle Los Cedros</option>
+                  <option value="10">Lote 10 • Calle Los Robles</option>
+                  <option value="11">Lote 11 • Calle Los Robles</option>
+                  <option value="12">Lote 12 • Calle Los Robles</option>
+                  <option value="13">Lote 13 • Calle Los Sauces</option>
+                  <option value="14">Lote 14 • Calle Los Pinos</option>
+                  <option value="15" selected>Lote 15 • Calle Los Sauces</option>
+                  <option value="16">Lote 16 • Calle Jacarandas</option>
+                  <option value="17">Lote 17 • Calle Jacarandas</option>
+                  <option value="18">Lote 18 • Calle Los Cedros</option>
+                  <option value="19">Lote 19 • Calle Los Cedros</option>
+                  <option value="20">Lote 20 • Calle Los Robles</option>
+                  <option value="21">Lote 21 • Calle Los Sauces</option>
+                  <option value="22">Lote 22 • Calle Los Sauces</option>
+                  <option value="23">Lote 23 • Calle Primavera</option>
+                  <option value="24">Lote 24 • Calle Primavera</option>
+                  <option value="25">Lote 25 • Calle Primavera</option>
+                </select>
+                <span class="absolute left-3 top-3 text-slate-400 text-xs"><i class="fa-solid fa-house"></i></span>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Contraseña</label>
+                <input type="password" id="reg-password" required minlength="6" placeholder="Mínimo 6 carácteres" class="w-full text-sm px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Confirmar Contraseña</label>
+                <input type="password" id="reg-password-confirm" required minlength="6" placeholder="Repite contraseña" class="w-full text-sm px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+              </div>
+            </div>
+
+            <div class="p-3 bg-emerald-50 rounded-xl text-[11px] text-emerald-800 border border-emerald-200 space-y-1">
+              <div class="font-bold flex items-center gap-1 text-emerald-900">
+                <i class="fa-solid fa-database text-emerald-600"></i> Persistencia en Supabase:
+              </div>
+              <div>Se guardará en la tabla <code>residentes</code> con contraseña encriptada (bcrypt) y rol de <strong>Residente</strong>.</div>
+            </div>
+
+            <button type="submit" id="btn-register-submit" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-sm shadow-md shadow-emerald-600/30 transition flex items-center justify-center gap-2">
+              <span>Crear Cuenta y Acceder</span>
+              <i class="fa-solid fa-user-check text-xs"></i>
+            </button>
+
+            <div class="text-center pt-2 text-xs text-slate-500">
+              ¿Ya estás registrado? 
+              <button type="button" onclick="switchAuthTab('login')" class="text-brand-600 hover:underline font-bold">Inicia sesión aquí</button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
 

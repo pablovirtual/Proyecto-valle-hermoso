@@ -18,9 +18,11 @@ API REST modular desarrollada con **Node.js 20+**, **Express 4**, **Supabase (Po
 | Conexión Supabase/PG     | ✅ Operativo |
 | Encriptación bcrypt      | ✅ Operativo |
 | Autenticación JWT        | ✅ Operativo |
+| Registro de Residentes   | ✅ Operativo |
 | Middleware de seguridad  | ✅ Operativo |
 | CRUD de Cuotas           | ✅ Operativo |
-| Suite de pruebas         | ✅ 5/5 OK    |
+| CRUD de Pagos            | ✅ Operativo |
+| Suite de pruebas         | ✅ 9/9 OK    |
 
 ---
 
@@ -134,7 +136,7 @@ Base URL: `http://localhost:3000`
 }
 ```
 
-**Respuesta exitosa:**
+**Respuesta exitosa de login:**
 ```json
 {
   "success": true,
@@ -146,6 +148,39 @@ Base URL: `http://localhost:3000`
     "correo": "admin@vallehermoso.mx",
     "rol": "Administrador"
   }
+}
+```
+
+**Body de registro de residente (`POST /api/auth/register`):**
+```json
+{
+  "nombre": "Mariana Soto Morales",
+  "correo": "mariana.soto@vallehermoso.mx",
+  "password": "PasswordSegura123!",
+  "rol": "Residente"
+}
+```
+
+**Respuesta exitosa de registro (HTTP 201 Created + Auto-login):**
+```json
+{
+  "success": true,
+  "message": "Residente registrado exitosamente.",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "usuario": {
+    "id_residente": 3,
+    "nombre": "Mariana Soto Morales",
+    "correo": "mariana.soto@vallehermoso.mx",
+    "rol": "Residente"
+  }
+}
+```
+
+**Respuesta en caso de correo duplicado (HTTP 409 Conflict):**
+```json
+{
+  "success": false,
+  "error": "El correo electrónico ya se encuentra registrado."
 }
 ```
 
@@ -303,10 +338,10 @@ Abre tu navegador y visita:
 
 ## 🧪 Suite de Pruebas Automatizadas
 
-Este proyecto incluye el script [`test-api.js`](./test-api.js) que ejecuta **7 pruebas de integración** reales contra el servidor y Supabase:
+Este proyecto incluye los scripts [`test-api.js`](./test-api.js) y [`run-tests.js`](./run-tests.js) que ejecutan **9 pruebas de integración** reales contra el servidor y Supabase de manera automatizada:
 
 ```bash
-# Con el servidor corriendo en otra terminal:
+# Ejecuta las pruebas levantando automáticamente el servidor de prueba:
 npm test
 ```
 
@@ -321,12 +356,17 @@ npm test
 | 5 | Ruta protegida CON token JWT válido | Creación exitosa HTTP 201 en Supabase               |
 | 6 | Registrar Pago (`POST /api/pagos`)  | Asienta pago en Supabase y actualiza cuota a Pagado |
 | 7 | Historial de Pagos con JWT          | Listado general e historial por residente en vivo   |
+| 8 | Registro de Nuevos Residentes       | `POST /api/auth/register` inserta en Supabase con bcrypt y emite JWT |
+| 9 | Prevención de Correo Duplicado      | Retorna HTTP 409 Conflict al intentar duplicar      |
 
 **Resultado esperado:**
 ```
-🎉 ¡TODAS LAS PRUEBAS (7/7) PASARON AL 100%!
-La infraestructura de servicios (Auth, Cuotas y Pagos),
-la base de datos Supabase y la seguridad JWT están operando.
+🎉 ¡TODAS LAS PRUEBAS (9/9) PASARON AL 100%!
+- Autenticación JWT y Roles (Admin / Residente)
+- Registro de Nuevos Residentes con Encriptación bcrypt
+- Prevención de Correos Duplicados (HTTP 409)
+- CRUD de Cuotas y Protección de Rutas
+- CRUD de Pagos y Actualización Automática de Estados
 ```
 
 ---

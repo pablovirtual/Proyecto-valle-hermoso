@@ -94,6 +94,7 @@ const login = async (req, res) => {
 const register = async (req, res) => {
   const { nombre, correo, password, rol } = req.body;
 
+  // 1. Validación de campos obligatorios
   if (!nombre || !correo || !password) {
     return res.status(400).json({
       success: false,
@@ -101,18 +102,50 @@ const register = async (req, res) => {
     });
   }
 
+  // 2. Validación de formato de correo y longitud de contraseña
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(correo.trim())) {
+    return res.status(400).json({
+      success: false,
+      error: 'El formato del correo electrónico es inválido.'
+    });
+  }
+
+  if (password.length < 6) {
+    return res.status(400).json({
+      success: false,
+      error: 'La contraseña debe tener al menos 6 caracteres.'
+    });
+  }
+
   try {
-    // 1. Encriptación de contraseña mediante bcrypt (factor de costo = 10)
+    const cleanEmail = correo.trim().toLowerCase();
+
+    // 3. Verificar si el correo ya existe previamente
+    const { data: existente } = await supabase
+      .from('residentes')
+      .select('id_residente')
+      .eq('correo', cleanEmail)
+      .maybeSingle();
+
+    if (existente) {
+      return res.status(409).json({
+        success: false,
+        error: 'El correo electrónico ya se encuentra registrado.'
+      });
+    }
+
+    // 4. Encriptación de contraseña mediante bcrypt (factor de costo = 10)
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // 2. Inserción del nuevo residente en Supabase
+    // 5. Inserción del nuevo residente en la tabla base 'residentes'
     const { data, error } = await supabase
-      .from('Residentes')
+      .from('residentes')
       .insert([
         {
           nombre: nombre.trim(),
-          correo: correo.trim().toLowerCase(),
+          correo: cleanEmail,
           password: hashedPassword,
           rol: rol || 'Residente'
         }
@@ -130,9 +163,23 @@ const register = async (req, res) => {
       throw error;
     }
 
+    // 6. Generación de Token JWT para inicio de sesión inmediato (auto-login)
+    const payload = {
+      id_residente: data.id_residente,
+      nombre: data.nombre,
+      correo: data.correo,
+      rol: data.rol
+    };
+
+    const token = jwt.sign(payload, process.env.JWT_SECRET, {
+      expiresIn: process.env.JWT_EXPIRES_IN || '8h'
+    });
+
     return res.status(201).json({
       success: true,
       message: 'Residente registrado exitosamente.',
+      token,
+      usuario: payload,
       data
     });
 
@@ -140,7 +187,7 @@ const register = async (req, res) => {
     console.error('[AUTH CONTROLLER ERROR - REGISTER]:', err.message);
     return res.status(500).json({
       success: false,
-      error: 'Error al registrar el residente.'
+      error: 'Error al registrar el residente en la base de datos.'
     });
   }
 };
